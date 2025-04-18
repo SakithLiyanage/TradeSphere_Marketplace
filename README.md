@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # TradeSphere-marketplace
 
 ## Overview

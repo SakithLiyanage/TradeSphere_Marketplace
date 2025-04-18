@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # ikman-marketplace
 
 ## Overview
@@ -90,3 +91,6 @@ Contributions are welcome! Please open an issue or submit a pull request for any
 
 ## License
 This project is licensed under the MIT License. See the LICENSE file for details.
+=======
+# TradeSphere_Marketplace
+>>>>>>> 4ad310d24b98170172690ef0866ca81a8d2786e3

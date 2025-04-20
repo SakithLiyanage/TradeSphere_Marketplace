@@ -34,6 +34,10 @@ const favoriteRoutes = require('./routes/favoriteRoutes');
 app.use('/api/favorites', favoriteRoutes);
 
 
+app.use('/api/listings', require('./routes/listingRoutes'));
+app.use('/api/categories', require('./routes/categoryRoutes'));
+
+
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));

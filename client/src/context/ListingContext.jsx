@@ -1,6 +1,5 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import axios from 'axios';
-import { toast } from 'react-hot-toast';
 
 const ListingContext = createContext();
 
@@ -10,9 +9,9 @@ export const ListingProvider = ({ children }) => {
   const [listings, setListings] = useState([]);
   const [featuredListings, setFeaturedListings] = useState([]);
   const [recentListings, setRecentListings] = useState([]);
-  const [currentListing, setCurrentListing] = useState(null);
   const [userListings, setUserListings] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [currentListing, setCurrentListing] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState({
@@ -25,81 +24,187 @@ export const ListingProvider = ({ children }) => {
   const loadCategories = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/categories`);
-      setCategories(response.data.data || []);
-      setError(null);
+      
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/categories`
+      );
+      
+      if (response.data.success) {
+        setCategories(response.data.data);
+      }
     } catch (error) {
-      console.error("Error loading categories:", error);
-      setError('Failed to load categories. Please try again.');
-      toast.error('Failed to load categories.');
+      console.error('Error loading categories:', error);
+      setError('Failed to load categories');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Load home page listings
+  // Load categories on mount
+  useEffect(() => {
+    loadCategories();
+  }, [loadCategories]);
+
+  // Load listings with optional filters
+  const loadListings = useCallback(async (filters = {}) => {
+    try {
+      setLoading(true);
+      
+      // Build query string from filters
+      const queryParams = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) queryParams.append(key, value);
+      });
+      
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/listings?${queryParams.toString()}`
+      );
+      
+      if (response.data.success) {
+        setListings(response.data.listings);
+        setPagination(response.data.pagination);
+      }
+      
+      setError(null);
+      return response.data;
+    } catch (error) {
+      console.error('Error loading listings:', error);
+      setError('Failed to load listings');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Fetch listings by category
+  const fetchListingsByCategory = useCallback(async (categorySlug, params = {}) => {
+    try {
+      setLoading(true);
+      
+      // Add the category to the params
+      const queryParams = new URLSearchParams();
+      
+      // Ensure category is included
+      queryParams.append('category', categorySlug);
+      
+      // Add other filters
+      Object.entries(params).forEach(([key, value]) => {
+        if (value && key !== 'category') queryParams.append(key, value);
+      });
+      
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/listings?${queryParams.toString()}`
+      );
+      
+      if (response.data.success) {
+        setListings(response.data.listings);
+        setPagination(response.data.pagination);
+      }
+      
+      setError(null);
+      return {
+        listings: response.data.listings,
+        total: response.data.pagination.total,
+        limit: params.limit || 16
+      };
+    } catch (error) {
+      console.error(`Error fetching listings for category ${categorySlug}:`, error);
+      setError(`Failed to load ${categorySlug} listings`);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Load home page listings (featured and recent)
   const loadHomePageListings = useCallback(async () => {
     try {
       setLoading(true);
       
       // Fetch featured listings
-      const featuredResponse = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/listings/featured`);
-      setFeaturedListings(featuredResponse.data.listings || []);
+      const featuredResponse = await axios.get(
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/listings?featured=true&limit=8`
+      );
+      
+      if (featuredResponse.data.success) {
+        setFeaturedListings(featuredResponse.data.listings);
+      }
       
       // Fetch recent listings
-      const recentResponse = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/listings/recent`);
-      setRecentListings(recentResponse.data.listings || []);
+      const recentResponse = await axios.get(
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/listings?limit=8&sort=createdAt-desc`
+      );
+      
+      if (recentResponse.data.success) {
+        setRecentListings(recentResponse.data.listings);
+      }
       
       setError(null);
     } catch (error) {
-      console.error("Error loading home page listings:", error);
-      setError('Failed to load listings. Please try again.');
-      toast.error('Failed to load listings.');
+      console.error('Error loading homepage listings:', error);
+      setError('Failed to load homepage listings');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Load listings with filters
-  const loadListings = useCallback(async (params = {}) => {
+  // Load user listings
+  const loadUserListings = useCallback(async (page = 1) => {
     try {
       setLoading(true);
-      const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/listings`, { params });
-      setListings(response.data.listings || []);
-      setPagination({
-        page: response.data.page || 1,
-        pages: response.data.pages || 1,
-        total: response.data.total || 0
-      });
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+      
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/listings/user/me?page=${page}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (response.data.success) {
+        setUserListings(response.data.listings);
+      }
+      
       setError(null);
+      return response.data;
     } catch (error) {
-      console.error("Error loading listings:", error);
-      setError('Failed to load listings. Please try again.');
-      toast.error('Failed to load listings.');
+      console.error('Error loading user listings:', error);
+      setError('Failed to load your listings');
+      throw error;
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Get a specific listing
+  // Get single listing
   const getListing = useCallback(async (id) => {
     try {
       setLoading(true);
-      const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/listings/${id}`);
-      setCurrentListing(response.data.listing || null);
+      
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/listings/${id}`
+      );
+      
+      if (response.data.success) {
+        setCurrentListing(response.data.listing);
+      } else {
+        throw new Error('Listing not found');
+      }
+      
       setError(null);
       return response.data.listing;
     } catch (error) {
-      console.error(`Error loading listing ${id}:`, error);
-      setError('Failed to load listing details. Please try again.');
-      toast.error('Failed to load listing details.');
-      return null;
+      console.error(`Error fetching listing ${id}:`, error);
+      setError('Failed to load listing');
+      throw error;
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Create a new listing
+  // Create new listing
   const createListing = useCallback(async (listingData) => {
     try {
       setLoading(true);
@@ -108,64 +213,35 @@ export const ListingProvider = ({ children }) => {
       if (!token) {
         throw new Error('You must be logged in to create a listing');
       }
-
+      
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/listings`,
         listingData,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (response.data.success && response.data.listing) {
+        // Update user listings if they exist
+        if (userListings.length > 0) {
+          setUserListings(prevListings => [response.data.listing, ...prevListings]);
         }
-      );
-
-      setError(null);
-      return response.data.listing;
-    } catch (error) {
-      console.error("Error creating listing:", error);
-      setError('Failed to create listing. Please try again.');
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Get user listings
-  const getUserListings = useCallback(async (userId) => {
-    try {
-      setLoading(true);
-      
-      if (!userId) {
-        throw new Error('User ID is required');
+        
+        setError(null);
+        return response.data.listing;
+      } else {
+        throw new Error(response.data.message || 'Failed to create listing');
       }
-      
-      const token = localStorage.getItem('token');
-      
-      const response = await axios.get(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/listings/user/${userId}`,
-        token ? {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        } : {}
-      );
-      
-      const listings = response.data.listings || [];
-      setUserListings(listings);
-      setError(null);
-      return listings;
     } catch (error) {
-      console.error("Error loading user listings:", error);
-      setError('Failed to load your listings. Please try again.');
-      toast.error('Failed to load your listings.');
-      return [];
+      console.error('Error creating listing:', error);
+      const errorMsg = error.response?.data?.message || error.message;
+      setError(errorMsg);
+      throw new Error(errorMsg);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userListings]);
 
-  // Update a listing
+  // Update listing
   const updateListing = useCallback(async (id, listingData) => {
     try {
       setLoading(true);
@@ -186,18 +262,31 @@ export const ListingProvider = ({ children }) => {
         }
       );
 
+      // If successful, update the current listing in state
+      if (response.data.success && response.data.listing) {
+        setCurrentListing(response.data.listing);
+        
+        // Update listing in userListings array if it exists
+        if (userListings.length > 0) {
+          setUserListings(userListings.map(listing => 
+            listing._id === id ? response.data.listing : listing
+          ));
+        }
+      }
+
       setError(null);
       return response.data.listing;
     } catch (error) {
       console.error(`Error updating listing ${id}:`, error);
-      setError('Failed to update listing. Please try again.');
-      throw error;
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to update listing';
+      setError(errorMsg);
+      throw new Error(errorMsg);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userListings]);
 
-  // Delete a listing
+  // Delete listing
   const deleteListing = useCallback(async (id) => {
     try {
       setLoading(true);
@@ -207,7 +296,7 @@ export const ListingProvider = ({ children }) => {
         throw new Error('You must be logged in to delete a listing');
       }
 
-      await axios.delete(
+      const response = await axios.delete(
         `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/listings/${id}`,
         {
           headers: {
@@ -216,40 +305,53 @@ export const ListingProvider = ({ children }) => {
         }
       );
 
-      // Update user listings if they exist
-      if (userListings.length > 0) {
-        setUserListings(userListings.filter(listing => listing._id !== id));
-      }
+      if (response.data.success) {
+        // Update user listings if they exist
+        if (userListings.length > 0) {
+          setUserListings(userListings.filter(listing => listing._id !== id));
+        }
 
-      setError(null);
-      return true;
+        setError(null);
+        return true;
+      } else {
+        throw new Error(response.data.message || 'Failed to delete listing');
+      }
     } catch (error) {
       console.error(`Error deleting listing ${id}:`, error);
-      setError('Failed to delete listing. Please try again.');
-      throw error;
+      const errorMessage = error.response?.data?.message || error.message;
+      setError(`Failed to delete listing: ${errorMessage}`);
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
   }, [userListings]);
+  
+  // Clear current listing
+  const clearCurrentListing = () => {
+    setCurrentListing(null);
+  };
 
+  // Value object to be provided
   const value = {
     listings,
     featuredListings,
     recentListings,
-    currentListing,
     userListings,
     categories,
+    currentListing,
     loading,
     error,
     pagination,
     loadCategories,
-    loadHomePageListings,
     loadListings,
+    loadHomePageListings,
+    loadUserListings,
     getListing,
     createListing,
-    getUserListings,
     updateListing,
-    deleteListing
+    deleteListing,
+    clearCurrentListing,
+    fetchListingsByCategory
   };
 
   return (

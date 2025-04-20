@@ -449,12 +449,12 @@ const HomePage = () => {
             >
               {categories.map((category) => (
                 <motion.div key={category.slug} variants={scaleUp}>
-                  <Link 
-                    to={`/category/${category.slug}`}
-                    className="group block"
-                    onMouseEnter={() => setActiveCategory(category.slug)}
-                    onMouseLeave={() => setActiveCategory(null)}
-                  >
+                   <Link 
+                      to={`/categories/${category.slug}`}
+                      className="group block"
+                      onMouseEnter={() => setActiveCategory(category.slug)}
+                      onMouseLeave={() => setActiveCategory(null)}
+                    >
                     <motion.div 
                       className="bg-white rounded-2xl overflow-hidden transform transition-all duration-300 group-hover:-translate-y-2 h-full"
                       whileHover={{ scale: 1.02 }}
@@ -510,7 +510,7 @@ const HomePage = () => {
                       key={category.slug} 
                       className="snap-start flex-shrink-0 w-72 group"
                     >
-                      <Link to={`/category/${category.slug}`} className="block">
+                      <Link to={`/categories/${category.slug}`} className="block">
                         <motion.div 
                           className="bg-white rounded-2xl overflow-hidden transform transition-all duration-300 hover:-translate-y-1 h-full"
                           whileTap={{ scale: 0.98 }}

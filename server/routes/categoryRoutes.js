@@ -13,12 +13,12 @@ const router = express.Router();
 
 // Public routes
 router.get('/', getCategories);
-router.get('/:id', getCategory);
+router.get('/:slug', getCategory);
 
 // Admin routes
 router.post('/', protect, admin, createCategory);
-router.post('/init', protect, admin, initializeCategories);
 router.put('/:id', protect, admin, updateCategory);
 router.delete('/:id', protect, admin, deleteCategory);
+router.post('/initialize', protect, admin, initializeCategories);
 
 module.exports = router;

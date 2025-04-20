@@ -5,9 +5,17 @@ import { useListing } from '../context/ListingContext';
 import ListingCard from '../components/listings/ListingCard';
 import Loader from '../components/common/Loader';
 
+const toTitleCase = (str) => {
+  if (!str) return '';
+  return str.replace(
+    /\w\S*/g,
+    (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+  );
+};
+
 const ListingsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { loadListings, listings, categories, loading, pagination } = useListing();
+  const { loadListings, listings, categories, loading, pagination, loadCategories } = useListing();
   
   const [filters, setFilters] = useState({
     search: searchParams.get('search') || '',
@@ -22,21 +30,26 @@ const ListingsPage = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [page, setPage] = useState(parseInt(searchParams.get('page')) || 1);
   
+  // Load categories on mount
+  useEffect(() => {
+    loadCategories();
+  }, [loadCategories]);
+
   // Fetch listings on mount and when filters change
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const params = {
-          page,
-          limit: 12,
-          ...filters
-        };
+        // Convert filters to API expected parameters
+        const apiParams = { ...filters, page, limit: 12 };
         
         // Convert sort values to API expected format
-        if (params.sort === 'price_low') params.sort = 'price-asc';
-        if (params.sort === 'price_high') params.sort = 'price-desc';
+        if (apiParams.sort === 'price_low') apiParams.sort = 'price-asc';
+        if (apiParams.sort === 'price_high') apiParams.sort = 'price-desc';
+        if (apiParams.sort === 'newest') apiParams.sort = 'createdAt-desc';
+        if (apiParams.sort === 'oldest') apiParams.sort = 'createdAt-asc';
+        if (apiParams.sort === 'popular') apiParams.sort = 'viewCount-desc';
         
-        await loadListings(params);
+        await loadListings(apiParams);
       } catch (error) {
         console.error('Failed to fetch listings', error);
       }
@@ -91,7 +104,7 @@ const ListingsPage = () => {
   };
   
   // Conditions for dropdown
-  const conditions = ['New', 'Like New', 'Excellent', 'Good', 'Fair', 'Poor'];
+  const conditions = ['new', 'like-new', 'excellent', 'good', 'fair', 'poor'];
   
   // Sort options
   const sortOptions = [
@@ -106,13 +119,12 @@ const ListingsPage = () => {
     <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
       {/* Page header */}
       <div className="mb-8">
-        
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
         <br></br><br></br>
           {filters.search 
             ? `Search results for "${filters.search}"`
             : filters.category
-              ? `${filters.category.charAt(0).toUpperCase() + filters.category.slice(1)} Listings`
+              ? `${toTitleCase(filters.category)} Listings`
               : 'All Listings'
           }
         </h1>
@@ -120,7 +132,6 @@ const ListingsPage = () => {
     
       {/* Search and Filter Bar */}
       <div className="mb-8">
-        
         <form onSubmit={handleSearchSubmit} className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-grow">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -190,7 +201,10 @@ const ListingsPage = () => {
               >
                 <option value="">All Categories</option>
                 {categories?.map((category) => (
-                  <option key={category._id || category.id || category.slug} value={category.slug || category.name?.toLowerCase()}>
+                  <option 
+                    key={category._id || category.id || category.slug} 
+                    value={category.slug || category.name?.toLowerCase()}
+                  >
                     {category.name}
                   </option>
                 ))}
@@ -210,8 +224,8 @@ const ListingsPage = () => {
               >
                 <option value="">Any Condition</option>
                 {conditions.map((condition) => (
-                  <option key={condition} value={condition.toLowerCase()}>
-                    {condition}
+                  <option key={condition} value={condition}>
+                    {toTitleCase(condition)}
                   </option>
                 ))}
               </select>
@@ -274,10 +288,10 @@ const ListingsPage = () => {
           
           let label = '';
           if (key === 'search') label = `Search: ${value}`;
-          else if (key === 'category') label = `Category: ${value}`;
+          else if (key === 'category') label = `Category: ${toTitleCase(value)}`;
           else if (key === 'minPrice') label = `Min: LKR ${value}`;
           else if (key === 'maxPrice') label = `Max: LKR ${value}`;
-          else if (key === 'condition') label = `Condition: ${value}`;
+          else if (key === 'condition') label = `Condition: ${toTitleCase(value)}`;
           else if (key === 'location') label = `Location: ${value}`;
           
           return (

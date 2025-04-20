@@ -47,6 +47,7 @@ function App() {
                 <Route path="/listings" element={<ListingsPage />} />
                 <Route path="/listings/:id" element={<ListingDetails />} />
                 <Route path="/category/:category" element={<CategoryPage />} />
+                <Route path="/categories/:category" element={<CategoryPage />} />
                 
                 {/* Protected routes */}
                 <Route path="/create-listing" element={

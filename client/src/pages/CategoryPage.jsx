@@ -1,14 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { FaFilter, FaSort } from 'react-icons/fa';
+import { FaFilter, FaSort, FaTimes } from 'react-icons/fa';
 import { useListing } from '../context/ListingContext';
 import ListingCard from '../components/listings/ListingCard';
 import Loader from '../components/common/Loader';
-import { toTitleCase } from '../utils/helpers';
+
+const toTitleCase = (str) => {
+  if (!str) return '';
+  return str.replace(
+    /\w\S*/g,
+    (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+  );
+};
 
 const CategoryPage = () => {
+  
   const { category } = useParams();
-  const { fetchListingsByCategory, listings, loading } = useListing();
+  const { fetchListingsByCategory, listings, loading, pagination } = useListing();
   
   const [filters, setFilters] = useState({
     condition: '',
@@ -23,15 +31,18 @@ const CategoryPage = () => {
   
   // Fetch listings for this category
   useEffect(() => {
+    
     const loadCategoryListings = async () => {
       try {
-        const params = {
-          page,
-          limit: 16,
-          ...filters
-        };
+        // Convert sort values to API expected format
+        const apiParams = { ...filters, page, limit: 16 };
         
-        const data = await fetchListingsByCategory(category, params);
+        if (apiParams.sort === 'price_low') apiParams.sort = 'price-asc';
+        if (apiParams.sort === 'price_high') apiParams.sort = 'price-desc';
+        if (apiParams.sort === 'newest') apiParams.sort = 'createdAt-desc';
+        if (apiParams.sort === 'oldest') apiParams.sort = 'createdAt-asc';
+        
+        const data = await fetchListingsByCategory(category, apiParams);
         setTotalPages(Math.ceil(data.total / data.limit));
       } catch (error) {
         console.error('Error fetching category listings', error);
@@ -60,7 +71,7 @@ const CategoryPage = () => {
   };
   
   // Conditions for dropdown
-  const conditions = ['New', 'Like New', 'Excellent', 'Good', 'Fair', 'Used'];
+  const conditions = ['new', 'like-new', 'excellent', 'good', 'fair', 'poor'];
   
   // Sort options
   const sortOptions = [
@@ -70,8 +81,11 @@ const CategoryPage = () => {
     { value: 'price_high', label: 'Price: High to Low' },
   ];
   
+  
   // Category specific metadata
+  
   const categoryMeta = {
+    
     'vehicles': {
       title: 'Vehicles for Sale',
       description: 'Find the perfect vehicle. Browse cars, motorcycles, vans, trucks, boats and more.',
@@ -116,6 +130,30 @@ const CategoryPage = () => {
     icon: 'fa-tag',
     popularSearches: []
   };
+
+  // Track applied filters for UI
+  const getAppliedFilters = () => {
+    const applied = [];
+    
+    if (filters.condition) applied.push({
+      key: 'condition',
+      label: `Condition: ${toTitleCase(filters.condition)}`
+    });
+    
+    if (filters.minPrice) applied.push({
+      key: 'minPrice',
+      label: `Min Price: Rs.${filters.minPrice}`
+    });
+    
+    if (filters.maxPrice) applied.push({
+      key: 'maxPrice',
+      label: `Max Price: Rs.${filters.maxPrice}`
+    });
+    
+    return applied;
+  };
+  
+  const appliedFilters = getAppliedFilters();
   
   return (
     <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -179,6 +217,7 @@ const CategoryPage = () => {
       </div>
       
       {/* Expanded filters */}
+      
       {showFilters && (
         <div className="mb-8 bg-white p-4 rounded-md shadow-sm border border-gray-200">
           <div className="flex justify-between items-center mb-4">
@@ -206,7 +245,7 @@ const CategoryPage = () => {
                 <option value="">Any Condition</option>
                 {conditions.map((condition) => (
                   <option key={condition} value={condition}>
-                    {condition}
+                    {toTitleCase(condition)}
                   </option>
                 ))}
               </select>
@@ -247,7 +286,37 @@ const CategoryPage = () => {
         </div>
       )}
       
+      {/* Applied Filters */}
+      {appliedFilters.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {appliedFilters.map((filter) => (
+            <div 
+              key={filter.key}
+              className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center"
+            >
+              <span>{filter.label}</span>
+              <button
+                onClick={() => setFilters(prev => ({ ...prev, [filter.key]: '' }))}
+                className="ml-1 text-gray-500 hover:text-gray-700"
+              >
+                <FaTimes size={12} />
+              </button>
+            </div>
+          ))}
+          
+          {appliedFilters.length > 0 && (
+            <button
+              onClick={clearFilters}
+              className="text-primary-500 hover:text-primary-700 text-sm"
+            >
+              Clear All
+            </button>
+          )}
+        </div>
+      )}
+      
       {/* Listings Grid */}
+      
       {loading ? (
         <Loader />
       ) : listings.length === 0 ? (

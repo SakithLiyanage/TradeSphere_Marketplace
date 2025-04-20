@@ -50,8 +50,8 @@ ikman-marketplace
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/ikman-marketplace.git
-   cd ikman-marketplace
+   git clone 
+   cd 
    ```
 
 2. Install server dependencies:

@@ -1,7 +1,7 @@
 # TradeSphere-marketplace
 
 ## Overview
-ikman-marketplace is a full-stack web application that allows users to post and browse listings for various items such as vehicles, lands, electrical items, and more. Built using the MERN stack (MongoDB, Express, React, Node.js), this application provides a modern and responsive user interface using Tailwind CSS.
+TradeSphere-marketplace is a full-stack web application that allows users to post and browse listings for various items such as vehicles, lands, electrical items, and more. Built using the MERN stack (MongoDB, Express, React, Node.js), this application provides a modern and responsive user interface using Tailwind CSS.
 
 ## Features
 - User authentication (registration and login)

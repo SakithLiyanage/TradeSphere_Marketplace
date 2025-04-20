@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FaSearch, FaBars, FaTimes, FaSun, FaMoon, 
   FaUser, FaPlus, FaSignOutAlt, FaHeart, FaBell,
-  FaChevronDown, FaShoppingBag, FaRegCompass
+  FaChevronDown, FaShoppingBag, FaRegCompass, FaHome
 } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import tradeLogo from '../../images/tradelogo.png';
@@ -209,6 +209,21 @@ const Header = () => {
               }}
               className="flex items-center space-x-1"
             >
+              {/* Home Link - Added */}
+              <motion.div variants={navItemVariants} whileHover="hover">
+                <Link 
+                  to="/" 
+                  className={`flex items-center space-x-1 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
+                    scrolled || !isHomepage
+                      ? 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+                      : 'text-white/90 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  <FaHome size={16} />
+                  <span>Home</span>
+                </Link>
+              </motion.div>
+              
               <motion.div variants={navItemVariants} whileHover="hover">
                 <Link 
                   to="/listings" 
@@ -220,20 +235,6 @@ const Header = () => {
                 >
                   <FaRegCompass size={16} />
                   <span>Browse</span>
-                </Link>
-              </motion.div>
-              
-              <motion.div variants={navItemVariants} whileHover="hover">
-                <Link 
-                  to="/categories" 
-                  className={`flex items-center space-x-1 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
-                    scrolled || !isHomepage
-                      ? 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
-                      : 'text-white/90 hover:text-white hover:bg-white/10'
-                  }`}
-                >
-                  <FaShoppingBag size={16} />
-                  <span>Categories</span>
                 </Link>
               </motion.div>
               
@@ -509,6 +510,16 @@ const Header = () => {
                 </div>
               </form>
               
+              {/* Home Link - Added to mobile menu */}
+              <Link 
+                to="/" 
+                className="flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <FaHome size={18} />
+                <span className="font-medium">Home</span>
+              </Link>
+              
               <Link 
                 to="/listings" 
                 className="flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -516,15 +527,6 @@ const Header = () => {
               >
                 <FaRegCompass size={18} />
                 <span className="font-medium">Browse Listings</span>
-              </Link>
-              
-              <Link 
-                to="/categories" 
-                className="flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <FaShoppingBag size={18} />
-                <span className="font-medium">Categories</span>
               </Link>
               
               <Link 
@@ -576,8 +578,6 @@ const Header = () => {
                     <FaHeart size={18} />
                     <span className="font-medium">Favorites</span>
                   </Link>
-                  
-                  
                   
                   <button
                     onClick={handleLogout}

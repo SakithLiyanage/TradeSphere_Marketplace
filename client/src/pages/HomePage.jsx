@@ -136,7 +136,6 @@ const HomePage = () => {
       name: 'Vehicles', 
       icon: '🚗',
       description: 'Cars, bikes, and boats',
-      count: '2,341 listings',
       color: 'from-blue-500 to-blue-600',
       gradient: 'bg-gradient-to-br from-blue-500 to-blue-700'
     },
@@ -145,7 +144,6 @@ const HomePage = () => {
       name: 'Electronics', 
       icon: '📱',
       description: 'Phones, laptops, gadgets',
-      count: '5,128 listings',
       color: 'from-purple-500 to-purple-600',
       gradient: 'bg-gradient-to-br from-purple-500 to-indigo-700'
     },
@@ -154,7 +152,6 @@ const HomePage = () => {
       name: 'Furniture', 
       icon: '🛋️',
       description: 'Home and office furniture',
-      count: '1,422 listings',
       color: 'from-amber-500 to-amber-600',
       gradient: 'bg-gradient-to-br from-amber-500 to-orange-700'
     },
@@ -163,7 +160,6 @@ const HomePage = () => {
       name: 'Properties', 
       icon: '🏠',
       description: 'Homes, apartments, land',
-      count: '876 listings',
       color: 'from-green-500 to-green-600',
       gradient: 'bg-gradient-to-br from-green-500 to-emerald-700'
     },
@@ -172,7 +168,6 @@ const HomePage = () => {
       name: 'Jobs', 
       icon: '💼',
       description: 'Career opportunities',
-      count: '3,127 listings',
       color: 'from-red-500 to-red-600',
       gradient: 'bg-gradient-to-br from-red-500 to-rose-700'
     },
@@ -181,7 +176,6 @@ const HomePage = () => {
       name: 'Services', 
       icon: '🔧',
       description: 'Professional services',
-      count: '1,897 listings',
       color: 'from-cyan-500 to-cyan-600',
       gradient: 'bg-gradient-to-br from-cyan-500 to-sky-700'
     },
@@ -190,7 +184,6 @@ const HomePage = () => {
       name: 'Fashion', 
       icon: '👕',
       description: 'Clothing and accessories',
-      count: '4,532 listings',
       color: 'from-pink-500 to-pink-600',
       gradient: 'bg-gradient-to-br from-pink-500 to-fuchsia-700'
     },
@@ -199,7 +192,6 @@ const HomePage = () => {
       name: 'Hobbies', 
       icon: '🎨',
       description: 'Sports, art collections',
-      count: '2,766 listings',
       color: 'from-yellow-500 to-yellow-600',
       gradient: 'bg-gradient-to-br from-yellow-500 to-amber-700'
     }
@@ -548,86 +540,7 @@ const HomePage = () => {
         </div>
       </div>
       
-      {/* Featured Listings - Modern Carousel */}
-      <div className="bg-gray-50 py-24">
-        <div className="container mx-auto px-6">
-          <ScrollReveal>
-            <div className="flex flex-col items-center md:flex-row md:justify-between md:items-end mb-12">
-              <div className="text-center md:text-left mb-8 md:mb-0">
-                <div className="inline-flex items-center bg-amber-50 text-amber-700 px-4 py-1 rounded-full text-sm font-semibold mb-4">
-                  <FaStar className="mr-2 text-amber-500" /> Featured Selections
-                </div>
-                <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
-                  Premium Listings
-                </h2>
-                <p className="text-xl text-gray-600 max-w-2xl">
-                  Handpicked by our team for quality, value, and exceptional service
-                </p>
-              </div>
-              <Link 
-                to="/listings?featured=true" 
-                className="flex items-center gap-2 px-6 py-3 bg-white shadow-lg rounded-full text-primary-600 hover:text-primary-700 font-medium transition-all hover:shadow-xl transform hover:-translate-y-1"
-              >
-                View All Featured <FaChevronRight size={14} />
-              </Link>
-            </div>
-          </ScrollReveal>
-          
-          {loading ? (
-            <Loader />
-          ) : (
-            <div>
-              {/* Desktop view */}
-              <motion.div 
-                className="hidden lg:grid grid-cols-4 gap-6"
-                variants={staggerContainer}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, amount: 0.1 }}
-              >
-                {featuredListings && featuredListings.length > 0 ? (
-                  featuredListings.slice(0, 4).map((listing) => (
-                    <motion.div key={listing._id} variants={scaleUp}>
-                      <ListingCard listing={listing} featured={true} style="modern" />
-                    </motion.div>
-                  ))
-                ) : (
-                  <motion.p 
-                    className="col-span-full text-center text-gray-500 py-16 bg-white rounded-2xl shadow-sm"
-                    variants={fadeIn}
-                  >
-                    No featured listings available at the moment.
-                  </motion.p>
-                )}
-              </motion.div>
-              
-              {/* Mobile view - Horizontal scroll */}
-              <div className="lg:hidden -mx-6 px-6">
-                <ScrollReveal>
-                  <div className="flex overflow-x-auto pb-6 hide-scrollbar snap-x snap-mandatory">
-                    <div className="flex space-x-4">
-                      {featuredListings && featuredListings.length > 0 ? (
-                        featuredListings.map((listing) => (
-                          <div 
-                            key={listing._id}
-                            className="snap-start flex-shrink-0 w-80"
-                          >
-                            <ListingCard listing={listing} featured={true} style="modern" />
-                          </div>
-                        ))
-                      ) : (
-                        <p className="flex-shrink-0 w-full text-center text-gray-500 py-12">
-                          No featured listings available at the moment.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </ScrollReveal>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+     
       
       {/* Recent Listings with 3D Cards */}
       <div className="bg-white py-24 relative overflow-hidden">
@@ -762,10 +675,7 @@ const HomePage = () => {
             <div className="mt-20 pt-12 border-t border-gray-800">
               <div className="grid md:grid-cols-4 gap-8 text-center">
                 {[
-                  { value: "10K+", label: "Active Listings" },
-                  { value: "50K+", label: "Happy Users" },
-                  { value: "24/7", label: "Customer Support" },
-                  { value: "100%", label: "Secured Trading" },
+                 
                 ].map((stat, i) => (
                   <motion.div 
                     key={i}

@@ -1,11 +1,10 @@
-// server/models/Listing.js
 const mongoose = require('mongoose');
 const slugify = require('slugify');
 
 const ListingSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: [true, 'Please add a title'],
+    required: [true, 'Please provide a title'],
     trim: true,
     maxlength: [100, 'Title cannot be more than 100 characters']
   },
@@ -15,72 +14,62 @@ const ListingSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    required: [true, 'Please add a description'],
-    maxlength: [2000, 'Description cannot be more than 2000 characters']
+    required: [true, 'Please provide a description'],
+    minlength: [20, 'Description must be at least 20 characters long']
   },
   price: {
     type: Number,
-    required: [true, 'Please add a price']
+    required: [true, 'Please provide a price'],
+    min: [0, 'Price cannot be negative']
   },
-  priceType: {
+  category: {
     type: String,
-    enum: ['fixed', 'negotiable', 'free', 'contact'],
-    default: 'fixed'
+    required: [true, 'Please select a category'],
+    trim: true
   },
   condition: {
     type: String,
-    enum: ['new', 'like-new', 'excellent', 'good', 'fair', 'poor'],
-    default: 'good'
+    required: [true, 'Please specify the condition'],
+    enum: ['new', 'like-new', 'excellent', 'good', 'fair', 'poor']
   },
-  status: {
+  images: {
+    type: [String],
+    required: [true, 'Please upload at least one image'],
+    validate: {
+      validator: function(v) {
+        return v.length > 0 && v.length <= 8;
+      },
+      message: 'Please upload between 1 and 8 images'
+    }
+  },
+  location: {
     type: String,
-    enum: ['active', 'sold', 'expired', 'pending', 'draft'],
-    default: 'active'
+    required: [true, 'Please provide a location']
+  },
+  specifications: {
+    type: Object,
+    default: {}
   },
   featured: {
     type: Boolean,
     default: false
   },
-  images: {
-    type: [String],
-    required: [true, 'Please add at least one image'],
-    validate: {
-      validator: function(v) {
-        return v.length > 0 && v.length <= 10;
-      },
-      message: 'Please add between 1 and 10 images'
-    }
-  },
-  category: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Category',
-    required: true
-  },
-  subcategory: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Category'
-  },
-  location: {
-    type: String,
-    required: [true, 'Please add a location']
+  sold: {
+    type: Boolean,
+    default: false
   },
   user: {
     type: mongoose.Schema.ObjectId,
     ref: 'User',
     required: true
   },
-  views: {
+  viewCount: {
     type: Number,
     default: 0
   },
-  expiresAt: {
-    type: Date,
-    default: function() {
-      // Default expiration is 30 days from now
-      const date = new Date();
-      date.setDate(date.getDate() + 30);
-      return date;
-    }
+  favoriteCount: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true,
@@ -91,36 +80,9 @@ const ListingSchema = new mongoose.Schema({
 // Create slug from title
 ListingSchema.pre('save', function(next) {
   if (this.isModified('title')) {
-    // Create base slug
-    let baseSlug = slugify(this.title, { lower: true });
-    
-    // Add a random string to ensure uniqueness
-    const randomStr = Math.random().toString(36).substring(2, 7);
-    this.slug = `${baseSlug}-${randomStr}`;
+    this.slug = slugify(this.title, { lower: true }) + '-' + Math.floor(Math.random() * 1000000).toString();
   }
   next();
-});
-
-// Increment view count
-ListingSchema.methods.incrementViews = async function() {
-  this.views += 1;
-  await this.save();
-};
-
-// Reverse populate with virtuals - favorites
-ListingSchema.virtual('favorites', {
-  ref: 'Favorite',
-  localField: '_id',
-  foreignField: 'listing',
-  justOne: false
-});
-
-// Reverse populate with virtuals - messages
-ListingSchema.virtual('messages', {
-  ref: 'Message',
-  localField: '_id',
-  foreignField: 'listing',
-  justOne: false
 });
 
 module.exports = mongoose.model('Listing', ListingSchema);

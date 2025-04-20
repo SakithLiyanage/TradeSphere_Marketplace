@@ -4,12 +4,11 @@ import { FaPlus, FaEdit, FaTrash, FaEye } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { useListing } from '../../context/ListingContext';
-import { formatPrice, formatRelativeTime } from '../../utils/helpers';
 import Loader from '../common/Loader';
 
 const Dashboard = () => {
   const { currentUser } = useAuth();
-  const { fetchUserListings, deleteListing } = useListing();
+  const { getUserListings, deleteListing, loading: contextLoading } = useListing();
   
   const [myListings, setMyListings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,20 +17,23 @@ const Dashboard = () => {
   
   useEffect(() => {
     const loadUserListings = async () => {
+      if (!currentUser?._id) return;
+      
       try {
         setLoading(true);
-        const data = await fetchUserListings(currentUser._id);
-        setMyListings(data.listings);
+        const listings = await getUserListings(currentUser._id);
+        setMyListings(listings || []);
       } catch (error) {
-        console.error(error);
+        console.error("Error loading listings:", error);
         toast.error('Failed to load your listings');
+        setMyListings([]);
       } finally {
         setLoading(false);
       }
     };
     
     loadUserListings();
-  }, [currentUser._id, fetchUserListings]);
+  }, [currentUser, getUserListings]);
   
   const handleDeleteClick = (listing) => {
     setListingToDelete(listing);
@@ -58,8 +60,37 @@ const Dashboard = () => {
     setListingToDelete(null);
   };
   
+  // Format price with commas
+  const formatPrice = (price) => {
+    return price?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  };
+  
+  // Format relative time
+  const formatRelativeTime = (date) => {
+    if (!date) return '';
+    
+    const now = new Date();
+    const past = new Date(date);
+    const diffTime = Math.abs(now - past);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 1) {
+      return 'Today';
+    } else if (diffDays === 1) {
+      return 'Yesterday';
+    } else if (diffDays < 7) {
+      return `${diffDays} days ago`;
+    } else if (diffDays < 30) {
+      const weeks = Math.floor(diffDays / 7);
+      return `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
+    } else {
+      return past.toLocaleDateString();
+    }
+  };
+  
   return (
     <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      <br></br><br></br><br></br><br></br>
       <div className="max-w-5xl mx-auto">
         {/* Header with welcome message */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
@@ -82,7 +113,7 @@ const Dashboard = () => {
             <div className="text-gray-500">Active Listings</div>
           </div>
           <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="text-4xl font-bold text-accent-500">{myListings.filter(l => l.views > 0).length}</div>
+            <div className="text-4xl font-bold text-accent-500">{myListings.filter(l => l.viewCount > 0).length}</div>
             <div className="text-gray-500">Viewed Listings</div>
           </div>
           <div className="bg-white rounded-lg shadow-md p-6">
@@ -97,8 +128,10 @@ const Dashboard = () => {
             <h2 className="text-lg font-medium text-gray-900">Your Listings</h2>
           </div>
           
-          {loading ? (
-            <Loader />
+          {loading || contextLoading ? (
+            <div className="flex justify-center items-center p-10">
+              <Loader />
+            </div>
           ) : myListings.length === 0 ? (
             <div className="p-6 text-center">
               <p className="text-gray-500 mb-4">You don't have any listings yet.</p>
@@ -152,44 +185,44 @@ const Dashboard = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{formatPrice(listing.price)}</div>
+                        <div className="text-sm font-medium text-gray-900">Rs. {formatPrice(listing.price)}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-500">{formatRelativeTime(listing.createdAt)}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                          ${listing.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                          {listing.active ? 'Active' : 'Inactive'}
+                          ${!listing.sold ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                          {!listing.sold ? 'Active' : 'Sold'}
                         </span>
                         {listing.featured && (
-                          <span className="ml-1 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-accent-100 text-accent-800">
+                          <span className="ml-1 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
                             Featured
                           </span>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
+                        <div className="flex space-x-3">
                           <Link
                             to={`/listings/${listing._id}`}
                             className="text-gray-600 hover:text-gray-900"
                             title="View"
                           >
-                            <FaEye />
+                            <FaEye size={16} />
                           </Link>
                           <Link
                             to={`/edit-listing/${listing._id}`}
-                            className="text-primary-600 hover:text-primary-900"
+                            className="text-blue-600 hover:text-blue-900"
                             title="Edit"
                           >
-                            <FaEdit />
+                            <FaEdit size={16} />
                           </Link>
                           <button
                             onClick={() => handleDeleteClick(listing)}
                             className="text-red-600 hover:text-red-900"
                             title="Delete"
                           >
-                            <FaTrash />
+                            <FaTrash size={16} />
                           </button>
                         </div>
                       </td>

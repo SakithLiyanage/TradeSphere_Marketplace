@@ -1,4 +1,3 @@
-// src/components/common/Header.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -175,27 +174,22 @@ const Header = () => {
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
-          {/* Logo */}
+          {/* TradeSphere Logo */}
           <Link 
             to="/" 
             className="flex items-center space-x-2"
           >
             <motion.div 
-              whileHover={{ rotate: 5, scale: 1.1 }}
-              transition={{ type: "spring", stiffness: 400, damping: 10 }}
-              className="bg-gradient-to-br from-primary-500 to-primary-700 text-white p-1.5 rounded-lg shadow-lg"
-            >
-              <span className="font-bold text-xl">TS</span>
-            </motion.div>
-            <motion.span 
-              className={`text-2xl font-bold ${
-                scrolled && !isHomepage ? 'text-primary-600 dark:text-primary-400' : isHomepage && !scrolled ? 'text-white' : 'text-primary-600 dark:text-primary-400'
-              } tracking-tight`}
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
+              className="h-10"
             >
-              TradeSphere
-            </motion.span>
+              <img 
+                src="../../images/tradelogo.png" 
+                alt="TradeSphere Logo" 
+                className="h-10 w-auto"
+              />
+            </motion.div>
           </Link>
           
           {/* Desktop Navigation */}
@@ -320,7 +314,7 @@ const Header = () => {
                 {darkMode ? <FaSun size={16} /> : <FaMoon size={16} />}
               </motion.button>
               
-              {/* Sell Button */}
+              {/* Sell Button - Show for all users */}
               <motion.div variants={navItemVariants} whileHover="hover">
                 <Link
                   to="/create-listing"
@@ -332,7 +326,7 @@ const Header = () => {
               </motion.div>
             </motion.div>
             
-            {/* User Menu */}
+            {/* User Menu - Only show profile/login based on auth state */}
             <motion.div 
               variants={navItemVariants}
               initial="hidden"
@@ -340,6 +334,7 @@ const Header = () => {
               className="relative ml-2"
             >
               {currentUser ? (
+                /* Show user profile dropdown for logged in users */
                 <>
                   <motion.button 
                     className={`flex items-center space-x-2 p-1.5 rounded-full transition-colors ${
@@ -437,6 +432,7 @@ const Header = () => {
                   </AnimatePresence>
                 </>
               ) : (
+                /* Show Sign in and Register buttons for non-logged in users */
                 <div className="flex items-center space-x-3">
                   <motion.div whileHover="hover" variants={navItemVariants}>
                     <Link 
@@ -548,6 +544,7 @@ const Header = () => {
               </Link>
               
               {currentUser ? (
+                /* Show user profile info for logged in users on mobile */
                 <>
                   <div className="my-2 border-t border-gray-200 dark:border-gray-800"></div>
                   
@@ -608,6 +605,7 @@ const Header = () => {
                   </button>
                 </>
               ) : (
+                /* Show login options for non-logged in users on mobile */
                 <div className="mt-6 grid grid-cols-1 gap-3">
                   <Link 
                     to="/login" 

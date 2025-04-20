@@ -1,90 +1,78 @@
-// server/server.js
-const path = require('path');
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const cookieParser = require('cookie-parser');
-const morgan = require('morgan');
-const helmet = require('helmet');
-const mongoSanitize = require('express-mongo-sanitize');
-const rateLimit = require('express-rate-limit');
-const { errorHandler, notFound } = require('./middleware/errorMiddleware');
+const path = require('path');
 const connectDB = require('./config/db');
+const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
-// Load environment variables
+// Load env variables
 dotenv.config();
 
 // Connect to database
 connectDB();
 
-// Initialize Express
 const app = express();
-
-// Security Middleware
-app.use(helmet()); // Set security headers
-app.use(mongoSanitize()); // Prevent NoSQL Injection
-const limiter = rateLimit({
-  windowMs: 10 * 60 * 1000, // 10 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again after 10 minutes'
-});
-app.use('/api', limiter);
 
 // Body parser
 app.use(express.json());
-
-// Cookie parser
-app.use(cookieParser());
+app.use(express.urlencoded({ extended: false }));
 
 // Enable CORS
-app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? 'https://tradesphere.com' 
-    : 'http://localhost:3000',
-  credentials: true
-}));
+app.use(cors());
 
-// Development logging
-if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
+// Make uploads directory static
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Create uploads directory if it doesn't exist
+const fs = require('fs');
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// API Routes
+// Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/listings', require('./routes/listingRoutes'));
 app.use('/api/categories', require('./routes/categoryRoutes'));
-app.use('/api/favorites', require('./routes/favoriteRoutes'));
-app.use('/api/messages', require('./routes/messageRoutes'));
 app.use('/api/uploads', require('./routes/uploadRoutes'));
 
-// Serve static assets if in production
-if (process.env.NODE_ENV === 'production') {
-  // Set static folder
-  app.use(express.static(path.join(__dirname, '../client/build')));
-
-  app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, '../client', 'build', 'index.html'));
-  });
-} else {
-  app.get('/', (req, res) => {
-    res.send('API is running...');
-  });
-}
-
-// Error Handling Middleware
+// Error middleware
 app.use(notFound);
 app.use(errorHandler);
 
-// Start server
 const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT, () => {
+
+app.listen(PORT, () => {
   console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err) => {
-  console.log(`Error: ${err.message}`);
-  // Close server & exit process
-  server.close(() => process.exit(1));
-});
+// Initialize categories if they don't exist (for development purposes)
+const Category = require('./models/Category');
+const initializeCategories = async () => {
+  try {
+    const count = await Category.countDocuments();
+    
+    if (count === 0) {
+      console.log('No categories found. Creating default categories...');
+      const defaultCategories = [
+        { name: 'Electronics', icon: 'FaMobile', color: '#3B82F6', slug: 'electronics' },
+        { name: 'Vehicles', icon: 'FaCar', color: '#EF4444', slug: 'vehicles' },
+        { name: 'Property', icon: 'FaHome', color: '#10B981', slug: 'property' },
+        { name: 'Furniture', icon: 'FaCouch', color: '#F59E0B', slug: 'furniture' },
+        { name: 'Jobs', icon: 'FaBriefcase', color: '#8B5CF6', slug: 'jobs' },
+        { name: 'Services', icon: 'FaTools', color: '#EC4899', slug: 'services' },
+        { name: 'Fashion', icon: 'FaTshirt', color: '#6366F1', slug: 'fashion' },
+        { name: 'Books', icon: 'FaBook', color: '#F97316', slug: 'books' }
+      ];
+      
+      await Category.insertMany(defaultCategories);
+      console.log('Default categories created successfully!');
+    }
+  } catch (error) {
+    console.error('Error initializing categories:', error);
+  }
+};
+
+// Call the function to initialize categories
+initializeCategories();

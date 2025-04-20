@@ -1,6 +1,7 @@
 // server/controllers/authController.js
 const User = require('../models/User');
 const asyncHandler = require('express-async-handler');
+const jwt = require('jsonwebtoken');
 
 // @desc    Register user
 // @route   POST /api/auth/register
@@ -24,6 +25,13 @@ const registerUser = asyncHandler(async (req, res) => {
   });
 
   if (user) {
+    // Generate token
+    const token = jwt.sign(
+      { id: user._id }, 
+      process.env.JWT_SECRET, 
+      { expiresIn: '30d' }
+    );
+
     res.status(201).json({
       success: true,
       user: {
@@ -32,7 +40,7 @@ const registerUser = asyncHandler(async (req, res) => {
         email: user.email,
         avatar: user.avatar,
         isAdmin: user.isAdmin,
-        token: user.getSignedJwtToken()
+        token
       }
     });
   } else {
@@ -69,8 +77,12 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new Error('Invalid credentials');
   }
 
-  // Create token
-  const token = user.getSignedJwtToken();
+  // Generate token
+  const token = jwt.sign(
+    { id: user._id }, 
+    process.env.JWT_SECRET, 
+    { expiresIn: '30d' }
+  );
 
   res.json({
     success: true,
@@ -90,6 +102,11 @@ const loginUser = asyncHandler(async (req, res) => {
 // @access  Private
 const getMe = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user.id);
+
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
 
   res.json({
     success: true,

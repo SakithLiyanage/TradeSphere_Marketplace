@@ -1,4 +1,3 @@
-// server/controllers/listingController.js
 const Listing = require('../models/Listing');
 const Category = require('../models/Category');
 const User = require('../models/User');
@@ -8,131 +7,83 @@ const asyncHandler = require('express-async-handler');
 // @route   GET /api/listings
 // @access  Public
 const getListings = asyncHandler(async (req, res) => {
-  // Pagination
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 10;
   const startIndex = (page - 1) * limit;
   
-  // Filtering
-  const filter = {};
+  // Build query
+  const query = { sold: false }; // Only show unsold listings by default
   
-  // Status - default to active listings only
-  filter.status = req.query.status || 'active';
-  
-  // Category
-  if (req.query.category) {
-    const category = await Category.findOne({ slug: req.query.category });
-    if (category) {
-      filter.category = category._id;
-    }
-  }
-  
-  // Subcategory
-  if (req.query.subcategory) {
-    const subcategory = await Category.findOne({ slug: req.query.subcategory });
-    if (subcategory) {
-      filter.subcategory = subcategory._id;
-    }
-  }
-  
-  // User
-  if (req.query.user) {
-    filter.user = req.query.user;
-  }
-  
-  // Featured
-  if (req.query.featured === 'true') {
-    filter.featured = true;
-  }
-  
-  // Price range
-  if (req.query.minPrice || req.query.maxPrice) {
-    filter.price = {};
-    if (req.query.minPrice) {
-      filter.price.$gte = Number(req.query.minPrice);
-    }
-    if (req.query.maxPrice) {
-      filter.price.$lte = Number(req.query.maxPrice);
-    }
-  }
-  
-  // Condition
-  if (req.query.condition) {
-    filter.condition = req.query.condition;
-  }
-  
-  // Location
-  if (req.query.location) {
-    filter.location = { $regex: req.query.location, $options: 'i' };
-  }
-  
-  // Search term
+  // Search
   if (req.query.search) {
-    const searchRegex = { $regex: req.query.search, $options: 'i' };
-    filter.$or = [
-      { title: searchRegex },
-      { description: searchRegex },
+    query.$or = [
+      { title: { $regex: req.query.search, $options: 'i' } },
+      { description: { $regex: req.query.search, $options: 'i' } }
     ];
   }
   
-  // Sorting
-  let sort = {};
-  if (req.query.sort) {
-    switch (req.query.sort) {
-      case 'newest':
-        sort = { createdAt: -1 };
-        break;
-      case 'oldest':
-        sort = { createdAt: 1 };
-        break;
-      case 'price-low':
-        sort = { price: 1 };
-        break;
-      case 'price-high':
-        sort = { price: -1 };
-        break;
-      case 'views':
-        sort = { views: -1 };
-        break;
-      default:
-        sort = { createdAt: -1 };
-    }
-  } else {
-    // Default sort is newest first
-    sort = { createdAt: -1 };
+  // Filter by category
+  if (req.query.category) {
+    query.category = req.query.category;
   }
   
-  // Execute query
-  const total = await Listing.countDocuments(filter);
-  const listings = await Listing.find(filter)
-    .sort(sort)
-    .limit(limit)
-    .skip(startIndex)
-    .populate({
-      path: 'user',
-      select: 'name avatar location'
-    })
-    .populate({
-      path: 'category',
-      select: 'name slug'
-    })
-    .populate({
-      path: 'subcategory',
-      select: 'name slug'
-    });
+  // Filter by price range
+  if (req.query.minPrice || req.query.maxPrice) {
+    query.price = {};
+    if (req.query.minPrice) query.price.$gte = parseInt(req.query.minPrice);
+    if (req.query.maxPrice) query.price.$lte = parseInt(req.query.maxPrice);
+  }
   
-  // Pagination result
-  const pagination = {
-    total,
-    pages: Math.ceil(total / limit),
-    page,
-    limit
-  };
+  // Filter by location
+  if (req.query.location) {
+    query.location = { $regex: req.query.location, $options: 'i' };
+  }
+  
+  // Filter by condition
+  if (req.query.condition) {
+    query.condition = req.query.condition;
+  }
+  
+  // Count total listings
+  const total = await Listing.countDocuments(query);
+  
+  // Sort
+  let sortBy = {};
+  if (req.query.sort) {
+    switch (req.query.sort) {
+      case 'price-asc':
+        sortBy.price = 1;
+        break;
+      case 'price-desc':
+        sortBy.price = -1;
+        break;
+      case 'newest':
+        sortBy.createdAt = -1;
+        break;
+      case 'oldest':
+        sortBy.createdAt = 1;
+        break;
+      case 'popular':
+        sortBy.viewCount = -1;
+        break;
+      default:
+        sortBy.createdAt = -1;
+    }
+  } else {
+    sortBy.createdAt = -1; // Default sort by newest
+  }
+  
+  const listings = await Listing.find(query)
+    .populate('user', 'name avatar')
+    .sort(sortBy)
+    .skip(startIndex)
+    .limit(limit);
   
   res.json({
     success: true,
-    count: listings.length,
-    pagination,
+    page,
+    pages: Math.ceil(total / limit),
+    total,
     listings
   });
 });
@@ -141,22 +92,10 @@ const getListings = asyncHandler(async (req, res) => {
 // @route   GET /api/listings/featured
 // @access  Public
 const getFeaturedListings = asyncHandler(async (req, res) => {
-  const limit = parseInt(req.query.limit, 10) || 8;
-  
-  const listings = await Listing.find({ 
-    featured: true,
-    status: 'active'
-  })
+  const listings = await Listing.find({ featured: true, sold: false })
+    .populate('user', 'name avatar')
     .sort({ createdAt: -1 })
-    .limit(limit)
-    .populate({
-      path: 'user',
-      select: 'name avatar'
-    })
-    .populate({
-      path: 'category',
-      select: 'name slug'
-    });
+    .limit(6);
   
   res.json({
     success: true,
@@ -169,19 +108,10 @@ const getFeaturedListings = asyncHandler(async (req, res) => {
 // @route   GET /api/listings/recent
 // @access  Public
 const getRecentListings = asyncHandler(async (req, res) => {
-  const limit = parseInt(req.query.limit, 10) || 8;
-  
-  const listings = await Listing.find({ status: 'active' })
+  const listings = await Listing.find({ sold: false })
+    .populate('user', 'name avatar')
     .sort({ createdAt: -1 })
-    .limit(limit)
-    .populate({
-      path: 'user',
-      select: 'name avatar'
-    })
-    .populate({
-      path: 'category',
-      select: 'name slug'
-    });
+    .limit(8);
   
   res.json({
     success: true,
@@ -200,59 +130,20 @@ const getListing = asyncHandler(async (req, res) => {
     : { slug: req.params.id };
   
   const listing = await Listing.findOne(query)
-    .populate({
-      path: 'user',
-      select: 'name avatar location createdAt'
-    })
-    .populate({
-      path: 'category',
-      select: 'name slug icon'
-    })
-    .populate({
-      path: 'subcategory',
-      select: 'name slug'
-    });
+    .populate('user', 'name email phone avatar createdAt');
   
   if (!listing) {
     res.status(404);
     throw new Error('Listing not found');
   }
   
-  // Increment view count if not the owner viewing
-  const viewerIsOwner = req.user && req.user.id === listing.user._id.toString();
-  if (!viewerIsOwner) {
-    await listing.incrementViews();
-  }
-  
-  // Get related listings (same category, exclude current)
-  const relatedListings = await Listing.find({
-    category: listing.category._id,
-    _id: { $ne: listing._id },
-    status: 'active'
-  })
-    .sort({ createdAt: -1 })
-    .limit(4)
-    .select('title price images slug condition location')
-    .populate({
-      path: 'user',
-      select: 'name'
-    });
-
-  // Get user's other active listings
-  const userListings = await Listing.find({
-    user: listing.user._id,
-    _id: { $ne: listing._id },
-    status: 'active'
-  })
-    .sort({ createdAt: -1 })
-    .limit(3)
-    .select('title price images slug');
+  // Increment view count
+  listing.viewCount += 1;
+  await listing.save();
   
   res.json({
     success: true,
-    listing,
-    relatedListings,
-    userListings
+    listing
   });
 });
 
@@ -260,37 +151,37 @@ const getListing = asyncHandler(async (req, res) => {
 // @route   POST /api/listings
 // @access  Private
 const createListing = asyncHandler(async (req, res) => {
-  // Check if category exists
-  const category = await Category.findById(req.body.category);
-  if (!category) {
+  const { 
+    title, 
+    description, 
+    price, 
+    category, 
+    condition, 
+    images, 
+    location,
+    specifications
+  } = req.body;
+  
+  if (!title || !description || !price || !category || !condition || !images || !location) {
     res.status(400);
-    throw new Error('Category not found');
+    throw new Error('Please provide all required fields');
   }
   
-  // Check if subcategory exists and belongs to category
-  if (req.body.subcategory) {
-    const subcategory = await Category.findOne({
-      _id: req.body.subcategory,
-      parent: category._id
-    });
-    if (!subcategory) {
-      res.status(400);
-      throw new Error('Invalid subcategory');
-    }
+  if (!images || !images.length) {
+    res.status(400);
+    throw new Error('Please upload at least one image');
   }
   
-  // Create listing
   const listing = await Listing.create({
-    title: req.body.title,
-    description: req.body.description,
-    price: req.body.price,
-    priceType: req.body.priceType || 'fixed',
-    condition: req.body.condition || 'good',
-    images: req.body.images,
-    category: req.body.category,
-    subcategory: req.body.subcategory || null,
-    location: req.body.location,
-    user: req.user.id
+    title,
+    description,
+    price,
+    category,
+    condition,
+    images,
+    location,
+    specifications: specifications || {},
+    user: req.user._id
   });
   
   res.status(201).json({
@@ -303,59 +194,32 @@ const createListing = asyncHandler(async (req, res) => {
 // @route   PUT /api/listings/:id
 // @access  Private
 const updateListing = asyncHandler(async (req, res) => {
-  let listing = await Listing.findById(req.params.id);
+  const listing = await Listing.findById(req.params.id);
   
   if (!listing) {
     res.status(404);
     throw new Error('Listing not found');
   }
   
-  // Check if user owns the listing
-  if (listing.user.toString() !== req.user.id && !req.user.isAdmin) {
+  // Check if user is listing owner
+  if (listing.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
     res.status(401);
-    throw new Error('Not authorized');
+    throw new Error('Not authorized to update this listing');
   }
   
-  // Check if category exists if being updated
-  if (req.body.category) {
-    const category = await Category.findById(req.body.category);
-    if (!category) {
-      res.status(400);
-      throw new Error('Category not found');
-    }
-    
-    // Check if subcategory exists and belongs to category
-    if (req.body.subcategory) {
-      const subcategory = await Category.findOne({
-        _id: req.body.subcategory,
-        parent: category._id
-      });
-      if (!subcategory) {
-        res.status(400);
-        throw new Error('Invalid subcategory');
-      }
-    }
-  }
+  // Don't allow changing user
+  delete req.body.user;
   
   // Update listing
-  listing = await Listing.findByIdAndUpdate(
+  const updatedListing = await Listing.findByIdAndUpdate(
     req.params.id,
     req.body,
     { new: true, runValidators: true }
-  ).populate({
-    path: 'user',
-    select: 'name avatar'
-  }).populate({
-    path: 'category',
-    select: 'name slug'
-  }).populate({
-    path: 'subcategory',
-    select: 'name slug'
-  });
+  );
   
   res.json({
     success: true,
-    listing
+    listing: updatedListing
   });
 });
 
@@ -370,10 +234,10 @@ const deleteListing = asyncHandler(async (req, res) => {
     throw new Error('Listing not found');
   }
   
-  // Check if user owns the listing
-  if (listing.user.toString() !== req.user.id && !req.user.isAdmin) {
+  // Check if user is listing owner
+  if (listing.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
     res.status(401);
-    throw new Error('Not authorized');
+    throw new Error('Not authorized to delete this listing');
   }
   
   await listing.remove();
@@ -386,56 +250,31 @@ const deleteListing = asyncHandler(async (req, res) => {
 
 // @desc    Get user listings
 // @route   GET /api/listings/user/:userId
-// @access  Public for active listings, Private for all user listings
+// @access  Public
 const getUserListings = asyncHandler(async (req, res) => {
-  const userId = req.params.userId;
-  
-  // Check if user exists
-  const userExists = await User.findById(userId);
-  if (!userExists) {
-    res.status(404);
-    throw new Error('User not found');
-  }
-  
-  // Pagination
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 10;
   const startIndex = (page - 1) * limit;
   
-  // Filtering
-  const filter = { user: userId };
-  
-  // If not the owner or admin, only show active listings
-  const isOwner = req.user && (req.user.id === userId || req.user.isAdmin);
-  if (!isOwner) {
-    filter.status = 'active';
-  } else if (req.query.status) {
-    filter.status = req.query.status;
+  const user = await User.findById(req.params.userId);
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
   }
   
-  // Execute query
-  const total = await Listing.countDocuments(filter);
-  const listings = await Listing.find(filter)
-    .sort({ createdAt: -1 })
-    .limit(limit)
-    .skip(startIndex)
-    .populate({
-      path: 'category',
-      select: 'name slug'
-    });
+  // Count total listings
+  const total = await Listing.countDocuments({ user: req.params.userId });
   
-  // Pagination result
-  const pagination = {
-    total,
-    pages: Math.ceil(total / limit),
-    page,
-    limit
-  };
+  const listings = await Listing.find({ user: req.params.userId })
+    .sort({ createdAt: -1 })
+    .skip(startIndex)
+    .limit(limit);
   
   res.json({
     success: true,
-    count: listings.length,
-    pagination,
+    page,
+    pages: Math.ceil(total / limit),
+    total,
     listings
   });
 });
@@ -451,22 +290,22 @@ const markListingAsSold = asyncHandler(async (req, res) => {
     throw new Error('Listing not found');
   }
   
-  // Check if user owns the listing
-  if (listing.user.toString() !== req.user.id) {
+  // Check if user is listing owner
+  if (listing.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
     res.status(401);
-    throw new Error('Not authorized');
+    throw new Error('Not authorized to update this listing');
   }
   
-  listing.status = 'sold';
+  listing.sold = !listing.sold; // Toggle sold status
   await listing.save();
   
   res.json({
     success: true,
-    listing
+    sold: listing.sold
   });
 });
 
-// @desc    Feature or unfeature a listing (admin only)
+// @desc    Feature/unfeature listing
 // @route   PUT /api/listings/:id/feature
 // @access  Private/Admin
 const featureListing = asyncHandler(async (req, res) => {
@@ -477,7 +316,7 @@ const featureListing = asyncHandler(async (req, res) => {
     throw new Error('Listing not found');
   }
   
-  listing.featured = !listing.featured;
+  listing.featured = !listing.featured; // Toggle featured status
   await listing.save();
   
   res.json({

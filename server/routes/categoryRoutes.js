@@ -1,11 +1,11 @@
-// server/routes/categoryRoutes.js
 const express = require('express');
 const {
   getCategories,
   getCategory,
   createCategory,
   updateCategory,
-  deleteCategory
+  deleteCategory,
+  initializeCategories
 } = require('../controllers/categoryController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
@@ -17,6 +17,7 @@ router.get('/:id', getCategory);
 
 // Admin routes
 router.post('/', protect, admin, createCategory);
+router.post('/init', protect, admin, initializeCategories);
 router.put('/:id', protect, admin, updateCategory);
 router.delete('/:id', protect, admin, deleteCategory);
 

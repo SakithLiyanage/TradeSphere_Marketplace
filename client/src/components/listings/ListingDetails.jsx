@@ -15,13 +15,45 @@ import {
 import { toast } from 'react-hot-toast';
 import { useListing } from '../../context/ListingContext';
 import { useAuth } from '../../context/AuthContext';
-import { formatPrice, formatRelativeTime } from '../../utils/helpers';
 import Loader from '../common/Loader';
+
+// Helper functions for formatting
+const formatPrice = (price) => {
+  return price ? `Rs. ${price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}` : 'Price not specified';
+};
+
+const formatRelativeTime = (date) => {
+  if (!date) return '';
+  
+  const now = new Date();
+  const past = new Date(date);
+  const diffTime = Math.abs(now - past);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays < 1) {
+    const hours = Math.floor(diffTime / (1000 * 60 * 60));
+    if (hours < 1) {
+      const minutes = Math.floor(diffTime / (1000 * 60));
+      return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+    }
+    return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+  } else if (diffDays === 1) {
+    return 'Yesterday';
+  } else if (diffDays < 7) {
+    return `${diffDays} days ago`;
+  } else {
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+};
 
 const ListingDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { fetchListingById, currentListing, loading, deleteListing } = useListing();
+  const { getListing, currentListing, loading, deleteListing } = useListing();
   const { currentUser } = useAuth();
   
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -31,15 +63,16 @@ const ListingDetails = () => {
   useEffect(() => {
     const loadListing = async () => {
       try {
-        await fetchListingById(id);
+        await getListing(id);
       } catch (error) {
+        console.error("Error loading listing:", error);
         toast.error('Failed to load listing');
         navigate('/listings');
       }
     };
     
     loadListing();
-  }, [fetchListingById, id, navigate]);
+  }, [getListing, id, navigate]);
   
   const handleDeleteClick = () => {
     setShowDeleteConfirm(true);
@@ -60,7 +93,11 @@ const ListingDetails = () => {
   };
   
   if (loading || !currentListing) {
-    return <Loader fullScreen />;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader size="large" />
+      </div>
+    );
   }
   
   const { 
@@ -73,7 +110,8 @@ const ListingDetails = () => {
     category,
     specifications,
     createdAt,
-    user
+    user,
+    viewCount
   } = currentListing;
   
   const isOwner = currentUser && user && currentUser._id === user._id;
@@ -81,6 +119,7 @@ const ListingDetails = () => {
   return (
     <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto">
+      <br></br><br></br><br></br><br></br>
         {/* Breadcrumbs */}
         <nav className="flex mb-6 text-sm">
           <Link to="/" className="text-gray-500 hover:text-primary-600">Home</Link>
@@ -88,7 +127,7 @@ const ListingDetails = () => {
           <Link to="/listings" className="text-gray-500 hover:text-primary-600">Listings</Link>
           <span className="mx-2 text-gray-400">/</span>
           <Link 
-            to={`/category/${category}`} 
+            to={`/listings?category=${category}`} 
             className="text-gray-500 hover:text-primary-600"
           >
             {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -161,6 +200,14 @@ const ListingDetails = () => {
                 <div className="px-2 py-1 bg-gray-100 rounded-full">
                   {condition}
                 </div>
+                
+                {viewCount > 0 && (
+                  <div className="flex items-center">
+                    <span className="text-xs text-gray-400">
+                      {viewCount} view{viewCount !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                )}
               </div>
               
               <div className="text-3xl font-bold text-primary-600">
@@ -214,12 +261,12 @@ const ListingDetails = () => {
               <h2 className="text-lg font-semibold mb-4">Seller Information</h2>
               
               <div className="flex items-center space-x-4 mb-6">
-                <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
+                <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 overflow-hidden">
                   {user?.avatar ? (
                     <img 
                       src={user.avatar} 
                       alt={user.name} 
-                      className="w-full h-full rounded-full object-cover"
+                      className="w-full h-full object-cover"
                     />
                   ) : (
                     <FaUser size={20} />
@@ -227,7 +274,9 @@ const ListingDetails = () => {
                 </div>
                 <div>
                   <div className="font-medium text-gray-900">{user?.name || 'Unknown'}</div>
-                  <div className="text-sm text-gray-500">Member since {new Date(user?.createdAt).toLocaleDateString()}</div>
+                  <div className="text-sm text-gray-500">
+                    Member since {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown'}
+                  </div>
                 </div>
               </div>
               

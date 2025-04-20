@@ -1,4 +1,3 @@
-// server/controllers/categoryController.js
 const Category = require('../models/Category');
 const asyncHandler = require('express-async-handler');
 
@@ -6,25 +5,14 @@ const asyncHandler = require('express-async-handler');
 // @route   GET /api/categories
 // @access  Public
 const getCategories = asyncHandler(async (req, res) => {
-  // Only get parent categories by default
-  const parentOnly = req.query.parentOnly === 'true';
-  
-  // Build filter
-  const filter = parentOnly ? { parent: null } : {};
-  
-  // Get categories
-  const categories = await Category.find(filter)
-    .sort('name')
-    .populate({
-      path: 'subcategories',
-      select: 'name slug icon',
-      options: { sort: { name: 1 } }
-    });
+  // Get only top-level categories (those without a parent)
+  const categories = await Category.find({ parent: null })
+    .populate('subcategories');
   
   res.json({
     success: true,
     count: categories.length,
-    categories
+    data: categories
   });
 });
 
@@ -32,64 +20,42 @@ const getCategories = asyncHandler(async (req, res) => {
 // @route   GET /api/categories/:id
 // @access  Public
 const getCategory = asyncHandler(async (req, res) => {
-  // Find by ID or slug
+  // Find category by ID or slug
   const query = req.params.id.match(/^[0-9a-fA-F]{24}$/) 
     ? { _id: req.params.id }
     : { slug: req.params.id };
   
   const category = await Category.findOne(query)
-    .populate({
-      path: 'subcategories',
-      select: 'name slug icon description'
-    });
+    .populate('subcategories');
   
   if (!category) {
     res.status(404);
     throw new Error('Category not found');
   }
   
-  // Get parent category if this is a subcategory
-  let parentCategory = null;
-  if (category.parent) {
-    parentCategory = await Category.findById(category.parent)
-      .select('name slug');
-  }
-  
   res.json({
     success: true,
-    category,
-    parentCategory
+    data: category
   });
 });
 
-// @desc    Create new category
+// @desc    Create category
 // @route   POST /api/categories
 // @access  Private/Admin
 const createCategory = asyncHandler(async (req, res) => {
-  const { name, description, icon, color, image, parent } = req.body;
-  
-  // Check if parent category exists if specified
-  if (parent) {
-    const parentExists = await Category.findById(parent);
-    if (!parentExists) {
-      res.status(400);
-      throw new Error('Parent category not found');
-    }
-  }
+  const { name, icon, color, parent } = req.body;
   
   // Create category
   const category = await Category.create({
     name,
-    description,
     icon,
     color,
-    image,
     parent: parent || null
   });
   
   res.status(201).json({
     success: true,
-    category
+    data: category
   });
 });
 
@@ -104,21 +70,6 @@ const updateCategory = asyncHandler(async (req, res) => {
     throw new Error('Category not found');
   }
   
-  // Check if parent category exists if being updated
-  if (req.body.parent) {
-    const parentExists = await Category.findById(req.body.parent);
-    if (!parentExists) {
-      res.status(400);
-      throw new Error('Parent category not found');
-    }
-    
-    // Prevent category from being its own parent
-    if (req.body.parent === req.params.id) {
-      res.status(400);
-      throw new Error('Category cannot be its own parent');
-    }
-  }
-  
   // Update category
   category = await Category.findByIdAndUpdate(
     req.params.id,
@@ -128,7 +79,7 @@ const updateCategory = asyncHandler(async (req, res) => {
   
   res.json({
     success: true,
-    category
+    data: category
   });
 });
 
@@ -143,6 +94,14 @@ const deleteCategory = asyncHandler(async (req, res) => {
     throw new Error('Category not found');
   }
   
+  // Check if category has subcategories
+  const hasSubcategories = await Category.findOne({ parent: category._id });
+  
+  if (hasSubcategories) {
+    res.status(400);
+    throw new Error('Cannot delete category with subcategories. Delete subcategories first.');
+  }
+  
   await category.remove();
   
   res.json({
@@ -151,10 +110,44 @@ const deleteCategory = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Create default categories if none exist
+// @route   POST /api/categories/init
+// @access  Private/Admin
+const initializeCategories = asyncHandler(async (req, res) => {
+  // Check if categories already exist
+  const count = await Category.countDocuments();
+  
+  if (count > 0) {
+    res.status(400);
+    throw new Error('Categories already initialized');
+  }
+  
+  // Create default categories
+  const defaultCategories = [
+    { name: 'Electronics', icon: 'FaMobile', color: '#3B82F6', slug: 'electronics' },
+    { name: 'Vehicles', icon: 'FaCar', color: '#EF4444', slug: 'vehicles' },
+    { name: 'Property', icon: 'FaHome', color: '#10B981', slug: 'property' },
+    { name: 'Furniture', icon: 'FaCouch', color: '#F59E0B', slug: 'furniture' },
+    { name: 'Jobs', icon: 'FaBriefcase', color: '#8B5CF6', slug: 'jobs' },
+    { name: 'Services', icon: 'FaTools', color: '#EC4899', slug: 'services' },
+    { name: 'Fashion', icon: 'FaTshirt', color: '#6366F1', slug: 'fashion' },
+    { name: 'Books', icon: 'FaBook', color: '#F97316', slug: 'books' }
+  ];
+  
+  const categories = await Category.insertMany(defaultCategories);
+  
+  res.status(201).json({
+    success: true,
+    count: categories.length,
+    data: categories
+  });
+});
+
 module.exports = {
   getCategories,
   getCategory,
   createCategory,
   updateCategory,
-  deleteCategory
+  deleteCategory,
+  initializeCategories
 };

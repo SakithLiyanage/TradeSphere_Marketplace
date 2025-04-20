@@ -7,7 +7,7 @@ import Loader from '../components/common/Loader';
 
 const ListingsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { fetchListings, listings, categories, loading } = useListing();
+  const { loadListings, listings, categories, loading, pagination } = useListing();
   
   const [filters, setFilters] = useState({
     search: searchParams.get('search') || '',
@@ -20,8 +20,7 @@ const ListingsPage = () => {
   });
   
   const [showFilters, setShowFilters] = useState(false);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [page, setPage] = useState(parseInt(searchParams.get('page')) || 1);
   
   // Fetch listings on mount and when filters change
   useEffect(() => {
@@ -33,15 +32,18 @@ const ListingsPage = () => {
           ...filters
         };
         
-        const data = await fetchListings(params);
-        setTotalPages(Math.ceil(data.total / data.limit));
+        // Convert sort values to API expected format
+        if (params.sort === 'price_low') params.sort = 'price-asc';
+        if (params.sort === 'price_high') params.sort = 'price-desc';
+        
+        await loadListings(params);
       } catch (error) {
         console.error('Failed to fetch listings', error);
       }
     };
     
     fetchData();
-  }, [fetchListings, filters, page]);
+  }, [loadListings, filters, page]);
   
   // Update search params when filters change
   useEffect(() => {
@@ -53,8 +55,13 @@ const ListingsPage = () => {
       }
     });
     
+    // Add page to params if not on first page
+    if (page > 1) {
+      params.page = page.toString();
+    }
+    
     setSearchParams(params, { replace: true });
-  }, [filters, setSearchParams]);
+  }, [filters, page, setSearchParams]);
   
   // Handle filter changes
   const handleFilterChange = (e) => {
@@ -84,7 +91,7 @@ const ListingsPage = () => {
   };
   
   // Conditions for dropdown
-  const conditions = ['New', 'Like New', 'Excellent', 'Good', 'Fair', 'Used'];
+  const conditions = ['New', 'Like New', 'Excellent', 'Good', 'Fair', 'Poor'];
   
   // Sort options
   const sortOptions = [
@@ -92,13 +99,16 @@ const ListingsPage = () => {
     { value: 'oldest', label: 'Oldest First' },
     { value: 'price_low', label: 'Price: Low to High' },
     { value: 'price_high', label: 'Price: High to Low' },
+    { value: 'popular', label: 'Most Popular' }
   ];
   
   return (
     <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
       {/* Page header */}
       <div className="mb-8">
+        
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+        <br></br><br></br>
           {filters.search 
             ? `Search results for "${filters.search}"`
             : filters.category
@@ -107,9 +117,10 @@ const ListingsPage = () => {
           }
         </h1>
       </div>
-      
+    
       {/* Search and Filter Bar */}
       <div className="mb-8">
+        
         <form onSubmit={handleSearchSubmit} className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-grow">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -178,8 +189,8 @@ const ListingsPage = () => {
                 className="block w-full pl-3 pr-10 py-2 border border-gray-300 bg-white rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
               >
                 <option value="">All Categories</option>
-                {categories.map((category) => (
-                  <option key={category._id || category.slug} value={category.slug}>
+                {categories?.map((category) => (
+                  <option key={category._id || category.id || category.slug} value={category.slug || category.name?.toLowerCase()}>
                     {category.name}
                   </option>
                 ))}
@@ -199,7 +210,7 @@ const ListingsPage = () => {
               >
                 <option value="">Any Condition</option>
                 {conditions.map((condition) => (
-                  <option key={condition} value={condition}>
+                  <option key={condition} value={condition.toLowerCase()}>
                     {condition}
                   </option>
                 ))}
@@ -297,15 +308,17 @@ const ListingsPage = () => {
       
       {/* Listings Grid */}
       {loading ? (
-        <Loader />
-      ) : listings.length === 0 ? (
-        <div className="text-center py-12">
+        <div className="flex justify-center py-20">
+          <Loader size="large" />
+        </div>
+      ) : !listings || listings.length === 0 ? (
+        <div className="text-center py-12 bg-gray-50 rounded-lg">
           <div className="text-gray-500 mb-4">No listings found matching your criteria.</div>
           <button
             onClick={clearFilters}
-            className="text-primary-500 hover:text-primary-700"
+            className="text-primary-500 hover:text-primary-700 font-medium"
           >
-            Clear filters
+            Clear filters and try again
           </button>
         </div>
       ) : (
@@ -321,7 +334,7 @@ const ListingsPage = () => {
       )}
       
       {/* Pagination */}
-      {totalPages > 1 && (
+      {pagination && pagination.pages > 1 && (
         <div className="flex justify-center mt-8">
           <nav className="flex items-center">
             <button
@@ -333,12 +346,11 @@ const ListingsPage = () => {
             </button>
             
             <div className="flex">
-              {[...Array(totalPages).keys()].map((num) => {
-                const pageNum = num + 1;
+              {Array.from({ length: pagination.pages }, (_, i) => i + 1).map((pageNum) => {
                 // Show current page, first, last, and 1 page before/after current
                 if (
                   pageNum === 1 || 
-                  pageNum === totalPages || 
+                  pageNum === pagination.pages || 
                   Math.abs(page - pageNum) <= 1
                 ) {
                   return (
@@ -356,7 +368,7 @@ const ListingsPage = () => {
                   );
                 } else if (
                   (pageNum === 2 && page > 3) || 
-                  (pageNum === totalPages - 1 && page < totalPages - 2)
+                  (pageNum === pagination.pages - 1 && page < pagination.pages - 2)
                 ) {
                   return <span key={pageNum} className="px-3 py-1 border border-gray-300 bg-white">...</span>;
                 }
@@ -365,8 +377,8 @@ const ListingsPage = () => {
             </div>
             
             <button
-              onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={page === totalPages}
+              onClick={() => setPage(prev => Math.min(prev + 1, pagination.pages))}
+              disabled={page === pagination.pages}
               className="px-3 py-1 border border-gray-300 bg-white text-gray-500 rounded-r-md hover:bg-gray-50 disabled:opacity-50"
             >
               Next

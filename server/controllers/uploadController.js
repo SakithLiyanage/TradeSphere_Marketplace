@@ -1,80 +1,39 @@
-// server/controllers/uploadController.js
-const cloudinary = require('../utils/cloudinary');
+const path = require('path');
+const fs = require('fs');
 const asyncHandler = require('express-async-handler');
 
-// @desc    Upload images to Cloudinary
+// Ensure upload directory exists
+const uploadDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// @desc    Upload image
 // @route   POST /api/uploads
 // @access  Private
-const uploadImages = asyncHandler(async (req, res) => {
-  // Check if files exist
-  if (!req.files || req.files.length === 0) {
+const uploadImage = asyncHandler(async (req, res) => {
+  if (!req.file) {
     res.status(400);
-    throw new Error('No files uploaded');
+    throw new Error('No image file uploaded');
   }
 
-  // Check if too many files
-  if (req.files.length > 10) {
-    res.status(400);
-    throw new Error('Maximum 10 images allowed');
-  }
+  // Get the server URL
+  const protocol = req.protocol;
+  const host = req.get('host');
+  const baseUrl = `${protocol}://${host}`;
+  
+  // Create the full URL for the uploaded image
+  const imageUrl = `${baseUrl}/uploads/${req.file.filename}`;
 
-  // Upload to Cloudinary and get URLs
-  const uploadPromises = req.files.map(file => 
-    cloudinary.uploader.upload(file.path, {
-      folder: 'tradesphere',
-      resource_type: 'image',
-      allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
-      transformation: [
-        { width: 1200, height: 800, crop: 'limit', quality: 'auto:good' }
-      ]
-    })
-  );
-
-  try {
-    const results = await Promise.all(uploadPromises);
-    const urls = results.map(result => result.secure_url);
-
-    res.json({
-      success: true,
-      count: urls.length,
-      urls
-    });
-  } catch (error) {
-    res.status(400);
-    throw new Error(`Image upload failed: ${error.message}`);
-  }
-});
-
-// @desc    Delete image from Cloudinary
-// @route   DELETE /api/uploads
-// @access  Private
-const deleteImage = asyncHandler(async (req, res) => {
-  const { url } = req.body;
-
-  if (!url) {
-    res.status(400);
-    throw new Error('Image URL is required');
-  }
-
-  // Extract public_id from URL
-  const splitUrl = url.split('/');
-  const folderWithFilename = splitUrl[splitUrl.length - 2] + '/' + 
-    splitUrl[splitUrl.length - 1].split('.')[0];
-
-  try {
-    await cloudinary.uploader.destroy(folderWithFilename);
-    
-    res.json({
-      success: true,
-      message: 'Image deleted successfully'
-    });
-  } catch (error) {
-    res.status(400);
-    throw new Error(`Image deletion failed: ${error.message}`);
-  }
+  res.json({
+    success: true,
+    imageUrl,
+    filename: req.file.filename,
+    mimetype: req.file.mimetype,
+    size: req.file.size
+  });
 });
 
 module.exports = {
-  uploadImages,
-  deleteImage
+  uploadImage
 };

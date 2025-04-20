@@ -1,8 +1,7 @@
-// src/components/listings/ListingCard.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaMapMarkerAlt, FaStar, FaHeart, FaRegHeart, FaEye } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaStar, FaRegHeart, FaEye } from 'react-icons/fa';
 
 const ListingCard = ({ listing, featured = false }) => {
   const {
@@ -13,7 +12,7 @@ const ListingCard = ({ listing, featured = false }) => {
     location,
     createdAt,
     condition,
-    views
+    viewCount // Changed from 'views' to 'viewCount' to match model
   } = listing;
 
   // Format price with commas
@@ -89,11 +88,11 @@ const ListingCard = ({ listing, featured = false }) => {
             <div className="mt-auto">
               <div className="flex items-center justify-between">
                 <p className="text-xl font-bold text-primary-600">
-                  ${formatPrice(price)}
+                  LKR {formatPrice(price)}
                 </p>
                 <div className="flex items-center text-gray-400 text-xs">
                   <FaEye className="mr-1" /> 
-                  <span>{views || 0}</span>
+                  <span>{viewCount || 0}</span>
                 </div>
               </div>
               

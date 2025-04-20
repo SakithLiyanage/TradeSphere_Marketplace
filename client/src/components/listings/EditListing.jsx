@@ -13,7 +13,7 @@ const EditListing = () => {
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm();
   
   const { 
-    fetchListingById, 
+    getListing,  // Changed from fetchListingById to getListing
     updateListing, 
     currentListing, 
     loading 
@@ -54,31 +54,33 @@ const EditListing = () => {
   useEffect(() => {
     const loadListing = async () => {
       try {
-        const listing = await fetchListingById(id);
+        const listing = await getListing(id);  // Changed from fetchListingById to getListing
         
-        // Set form values
-        setValue('title', listing.title);
-        setValue('description', listing.description);
-        setValue('price', listing.price);
-        setValue('category', listing.category);
-        setValue('condition', listing.condition);
-        setValue('location', listing.location);
-        
-        // Set uploaded images
-        setUploadedImages(listing.images || []);
-        
-        // Set specifications if available
-        if (listing.specifications) {
-          Object.entries(listing.specifications).forEach(([key, value]) => {
-            // Find the corresponding field name from categoryFields
-            const categoryField = categoryFields[listing.category]?.find(
-              field => field.label === key
-            );
-            
-            if (categoryField) {
-              setValue(categoryField.name, value);
-            }
-          });
+        if (listing) {
+          // Set form values
+          setValue('title', listing.title);
+          setValue('description', listing.description);
+          setValue('price', listing.price);
+          setValue('category', listing.category);
+          setValue('condition', listing.condition);
+          setValue('location', listing.location);
+          
+          // Set uploaded images
+          setUploadedImages(listing.images || []);
+          
+          // Set specifications if available
+          if (listing.specifications) {
+            Object.entries(listing.specifications).forEach(([key, value]) => {
+              // Find the corresponding field name from categoryFields
+              const categoryField = categoryFields[listing.category]?.find(
+                field => field.label === key
+              );
+              
+              if (categoryField) {
+                setValue(categoryField.name, value);
+              }
+            });
+          }
         }
       } catch (error) {
         console.error(error);
@@ -88,7 +90,7 @@ const EditListing = () => {
     };
     
     loadListing();
-  }, [fetchListingById, id, navigate, setValue]);
+  }, [getListing, id, navigate, setValue, categoryFields]);
   
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
@@ -162,7 +164,11 @@ const EditListing = () => {
   };
   
   if (loading && !currentListing) {
-    return <Loader fullScreen />;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader size="large" />
+      </div>
+    );
   }
   
   return (
@@ -196,7 +202,7 @@ const EditListing = () => {
                       message: "Title cannot exceed 100 characters"
                     }
                   })}
-                  className={`input ${errors.title ? 'border-red-300' : ''}`}
+                  className={`w-full px-3 py-2 border rounded-md ${errors.title ? 'border-red-300' : 'border-gray-300'} focus:outline-none focus:ring-primary-500 focus:border-primary-500`}
                 />
                 {errors.title && (
                   <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>
@@ -211,7 +217,7 @@ const EditListing = () => {
                 <select
                   id="category"
                   {...register("category", { required: "Please select a category" })}
-                  className={`input ${errors.category ? 'border-red-300' : ''}`}
+                  className={`w-full px-3 py-2 border rounded-md ${errors.category ? 'border-red-300' : 'border-gray-300'} focus:outline-none focus:ring-primary-500 focus:border-primary-500`}
                 >
                   <option value="">Select a category</option>
                   {Object.keys(categoryFields).map((category) => (
@@ -247,7 +253,7 @@ const EditListing = () => {
                         message: "Price cannot be negative"
                       }
                     })}
-                    className={`input pl-10 ${errors.price ? 'border-red-300' : ''}`}
+                    className={`w-full pl-10 pr-3 py-2 border rounded-md ${errors.price ? 'border-red-300' : 'border-gray-300'} focus:outline-none focus:ring-primary-500 focus:border-primary-500`}
                   />
                 </div>
                 {errors.price && (
@@ -263,14 +269,14 @@ const EditListing = () => {
                 <select
                   id="condition"
                   {...register("condition", { required: "Please select a condition" })}
-                  className={`input ${errors.condition ? 'border-red-300' : ''}`}
+                  className={`w-full px-3 py-2 border rounded-md ${errors.condition ? 'border-red-300' : 'border-gray-300'} focus:outline-none focus:ring-primary-500 focus:border-primary-500`}
                 >
-                  <option value="New">New</option>
-                  <option value="Like New">Like New</option>
-                  <option value="Excellent">Excellent</option>
-                  <option value="Good">Good</option>
-                  <option value="Fair">Fair</option>
-                  <option value="Used">Used</option>
+                  <option value="new">New</option>
+                  <option value="like-new">Like New</option>
+                  <option value="excellent">Excellent</option>
+                  <option value="good">Good</option>
+                  <option value="fair">Fair</option>
+                  <option value="poor">Poor</option>
                 </select>
                 {errors.condition && (
                   <p className="mt-1 text-sm text-red-600">{errors.condition.message}</p>
@@ -287,7 +293,7 @@ const EditListing = () => {
                   type="text"
                   placeholder="City, District"
                   {...register("location", { required: "Location is required" })}
-                  className={`input ${errors.location ? 'border-red-300' : ''}`}
+                  className={`w-full px-3 py-2 border rounded-md ${errors.location ? 'border-red-300' : 'border-gray-300'} focus:outline-none focus:ring-primary-500 focus:border-primary-500`}
                 />
                 {errors.location && (
                   <p className="mt-1 text-sm text-red-600">{errors.location.message}</p>
@@ -310,7 +316,7 @@ const EditListing = () => {
                       message: "Description must be at least 20 characters"
                     }
                   })}
-                  className={`input ${errors.description ? 'border-red-300' : ''}`}
+                  className={`w-full px-3 py-2 border rounded-md ${errors.description ? 'border-red-300' : 'border-gray-300'} focus:outline-none focus:ring-primary-500 focus:border-primary-500`}
                 ></textarea>
                 {errors.description && (
                   <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
@@ -331,7 +337,7 @@ const EditListing = () => {
                       id={field.name}
                       type={field.type || 'text'}
                       {...register(field.name)}
-                      className="input"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                     />
                   </div>
                 ))}
@@ -401,7 +407,7 @@ const EditListing = () => {
                 disabled={loading || uploading}
                 className="w-full py-3 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
-                {loading ? <Loader size="small" /> : 'Update Listing'}
+                {loading ? <Loader size="small" light /> : 'Update Listing'}
               </button>
             </div>
           </form>
@@ -411,4 +417,4 @@ const EditListing = () => {
   );
 };
 
-export default EditListing; 
+export default EditListing;

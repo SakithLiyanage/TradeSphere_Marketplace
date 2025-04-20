@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import tradeLogo from '../../images/tradelogo.png';
+
 import { 
   FaFacebookF, 
   FaTwitter, 
@@ -114,10 +116,11 @@ const Footer = () => {
               variants={fadeInUp}
             >
               <Link to="/" className="flex items-center space-x-2 text-2xl font-bold text-white">
-                <span className="bg-gradient-to-br from-primary-500 to-primary-600 text-white p-1.5 rounded">
-                  TS
-                </span>
-                <span>TradeSphere</span>
+              <img 
+                  src={tradeLogo} 
+                  alt="TradeSphere Logo" 
+                  className="h-40 w-auto" 
+                />
               </Link>
               <p className="text-gray-400 mt-4 max-w-md">
                 Your trusted marketplace for buying and selling locally. 

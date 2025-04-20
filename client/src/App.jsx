@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import { ListingProvider } from './context/ListingContext';
+import Favorites from './components/favorites/Favorites';
 
 // Layouts
 import Header from './components/common/Header';
@@ -68,10 +69,16 @@ function App() {
                     <Profile />
                   </PrivateRoute>
                 } />
-                
+                <Route path="/favorites" element={
+                  <PrivateRoute>
+                    <Favorites />
+                  </PrivateRoute>
+                } />
                 {/* 404 route */}
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
+              
+              
             </main>
             <Footer />
           </div>

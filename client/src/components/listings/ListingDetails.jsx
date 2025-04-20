@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { 
   FaMapMarkerAlt, 
   FaClock, 
@@ -8,6 +9,7 @@ import {
   FaEnvelope,
   FaWhatsapp,
   FaHeart,
+  FaRegHeart,
   FaShare,
   FaEdit,
   FaTrash
@@ -59,6 +61,8 @@ const ListingDetails = () => {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [showContactInfo, setShowContactInfo] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [favoritesLoading, setFavoritesLoading] = useState(false);
   
   useEffect(() => {
     const loadListing = async () => {
@@ -72,7 +76,67 @@ const ListingDetails = () => {
     };
     
     loadListing();
-  }, [getListing, id, navigate]);
+    
+    // Check if listing is favorited when component loads and user is logged in
+    if (currentUser) {
+      checkFavoriteStatus();
+    }
+  }, [getListing, id, navigate, currentUser]);
+  
+  // Function to check if the current listing is favorited
+  const checkFavoriteStatus = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/favorites/${id}/check`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      setIsFavorited(response.data.isFavorite);
+    } catch (error) {
+      console.error('Error checking favorite status:', error);
+    }
+  };
+  
+  // Function to toggle favorite status
+  const toggleFavorite = async () => {
+    if (!currentUser) {
+      toast.error('Please log in to save favorites');
+      navigate('/login');
+      return;
+    }
+    
+    try {
+      setFavoritesLoading(true);
+      const token = localStorage.getItem('token');
+      
+      if (isFavorited) {
+        // Remove from favorites
+        await axios.delete(
+          `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/favorites/${id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        toast.success('Removed from favorites');
+        setIsFavorited(false);
+      } else {
+        // Add to favorites
+        await axios.post(
+          `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/favorites`,
+          { listingId: id },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        toast.success('Added to favorites');
+        setIsFavorited(true);
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      toast.error('Could not update favorites. Please try again.');
+    } finally {
+      setFavoritesLoading(false);
+    }
+  };
   
   const handleDeleteClick = () => {
     setShowDeleteConfirm(true);
@@ -337,12 +401,28 @@ const ListingDetails = () => {
               <h2 className="text-lg font-semibold mb-4">Actions</h2>
               
               <div className="space-y-3">
+                {/* Updated favorite button with actual functionality */}
                 <button 
-                  className="w-full py-2 flex justify-center items-center bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-                  onClick={() => toast.success('Added to favorites!')}
+                  className={`w-full py-2 flex justify-center items-center ${
+                    isFavorited 
+                      ? "bg-red-500 text-white hover:bg-red-600" 
+                      : "bg-white border border-gray-300 hover:bg-gray-50"
+                  } rounded-md transition-colors`}
+                  onClick={toggleFavorite}
+                  disabled={favoritesLoading}
                 >
-                  <FaHeart className="mr-2 text-red-500" />
-                  <span>Save to Favorites</span>
+                  {favoritesLoading ? (
+                    <Loader size="small" light={isFavorited} />
+                  ) : (
+                    <>
+                      {isFavorited ? (
+                        <FaHeart className="mr-2" />
+                      ) : (
+                        <FaRegHeart className="mr-2 text-red-500" />
+                      )}
+                      <span>{isFavorited ? 'Saved to Favorites' : 'Save to Favorites'}</span>
+                    </>
+                  )}
                 </button>
                 
                 <button 
@@ -355,6 +435,8 @@ const ListingDetails = () => {
                   <FaShare className="mr-2 text-primary-500" />
                   <span>Share Listing</span>
                 </button>
+                
+                
               </div>
             </div>
             

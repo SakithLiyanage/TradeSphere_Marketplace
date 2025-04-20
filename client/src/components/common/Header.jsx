@@ -7,6 +7,7 @@ import {
   FaChevronDown, FaShoppingBag, FaRegCompass
 } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
+import tradeLogo from '../../images/tradelogo.png';
 
 const Header = () => {
   const { currentUser, logout } = useAuth();
@@ -182,12 +183,12 @@ const Header = () => {
             <motion.div 
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
-              className="h-10"
+              className="h-14"
             >
               <img 
-                src="../../images/tradelogo.png" 
+                src={tradeLogo} 
                 alt="TradeSphere Logo" 
-                className="h-10 w-auto"
+                className="h-14 w-14"
               />
             </motion.div>
           </Link>
@@ -409,15 +410,7 @@ const Header = () => {
                             <FaHeart className="mr-3 text-gray-500 dark:text-gray-400" size={16} />
                             Favorites
                           </Link>
-                          <Link 
-                            to="/notifications" 
-                            className="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                            onClick={() => setUserDropdownOpen(false)}
-                          >
-                            <FaBell className="mr-3 text-gray-500 dark:text-gray-400" size={16} />
-                            <span>Notifications</span>
-                            <span className="ml-auto bg-accent-500 text-white text-xs py-0.5 px-1.5 rounded-full">3</span>
-                          </Link>
+                          
                           <div className="my-1 border-t border-gray-200 dark:border-gray-700"></div>
                           <button
                             onClick={handleLogout}
@@ -584,17 +577,7 @@ const Header = () => {
                     <span className="font-medium">Favorites</span>
                   </Link>
                   
-                  <Link 
-                    to="/notifications" 
-                    className="flex items-center justify-between px-4 py-3 rounded-xl text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <FaBell size={18} />
-                      <span className="font-medium">Notifications</span>
-                    </div>
-                    <span className="bg-accent-500 text-white text-xs py-0.5 px-2 rounded-full">3</span>
-                  </Link>
+                  
                   
                   <button
                     onClick={handleLogout}

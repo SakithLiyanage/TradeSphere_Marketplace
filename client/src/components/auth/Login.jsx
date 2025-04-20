@@ -5,6 +5,7 @@ import { FaEnvelope, FaLock, FaFacebookF, FaGoogle } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import Loader from '../common/Loader';
 import { toast } from 'react-hot-toast';
+import tradeLogo from '../../images/tradelogo.png';
 
 const Login = () => {
   const { register, handleSubmit, formState: { errors } } = useForm();
@@ -15,7 +16,7 @@ const Login = () => {
   const location = useLocation();
   
   // Get redirect path from location state or use dashboard as default
-  const from = location.state?.from?.pathname || "/dashboard";
+  const from = location.state?.from?.pathname || "/";
   
   // Effect to redirect if user is already logged in
   useEffect(() => {
@@ -74,9 +75,9 @@ const Login = () => {
         <div className="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-100 p-8">
           <div className="mb-8 text-center">
             <img 
-              src="/TRADESPHERE.png" 
+              src={tradeLogo}
               alt="TradeSphere Logo" 
-              className="h-12 mx-auto mb-4"
+              className="h-14 mx-auto mb-4"
             />
             <h2 className="text-2xl font-bold text-gray-900">
               Welcome back

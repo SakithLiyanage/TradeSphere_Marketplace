@@ -95,7 +95,7 @@ const removeFavorite = asyncHandler(async (req, res) => {
     throw new Error('Favorite not found');
   }
   
-  await favorite.remove();
+  await Favorite.deleteOne({ _id: favorite._id });
   
   res.json({
     success: true,

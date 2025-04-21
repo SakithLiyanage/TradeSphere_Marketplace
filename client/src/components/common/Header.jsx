@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -8,6 +8,7 @@ import {
 } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import tradeLogo from '../../images/tradelogo.png';
+import defaultAvatar from '../../images/default-avatar.png'; // Add default avatar import
 
 const Header = () => {
   const { currentUser, logout } = useAuth();
@@ -19,6 +20,7 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const searchInputRef = useRef(null);
+  const userMenuRef = useRef(null);
   
   const [darkMode, setDarkMode] = useState(
     localStorage.getItem('darkMode') === 'true' || 
@@ -58,6 +60,20 @@ const Header = () => {
     }
   }, [darkMode]);
   
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setUserDropdownOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, []);
+  
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
   };
@@ -70,11 +86,16 @@ const Header = () => {
     setUserDropdownOpen(!userDropdownOpen);
   };
   
-  const handleLogout = () => {
-    logout();
-    setUserDropdownOpen(false);
-    setMobileMenuOpen(false);
-  };
+  const handleLogout = useCallback(async () => {
+    try {
+      await logout();
+      setUserDropdownOpen(false);
+      setMobileMenuOpen(false);
+      navigate('/');
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  }, [logout, navigate]);
   
   const handleSearch = (e) => {
     e.preventDefault();
@@ -168,6 +189,18 @@ const Header = () => {
     : isHomepage
       ? "bg-transparent"
       : "bg-white dark:bg-gray-900";
+  
+  // Helper function to get user's first name or first initial
+  const getUserDisplayName = () => {
+    if (!currentUser?.name) return '';
+    return currentUser.name.split(' ')[0];
+  };
+  
+  // Helper function to get user's initials for avatar
+  const getUserInitial = () => {
+    if (!currentUser?.name) return '';
+    return currentUser.name.charAt(0).toUpperCase();
+  };
   
   return (
     <header 
@@ -334,6 +367,7 @@ const Header = () => {
               initial="hidden"
               animate="visible"
               className="relative ml-2"
+              ref={userMenuRef}
             >
               {currentUser ? (
                 /* Show user profile dropdown for logged in users */
@@ -354,21 +388,11 @@ const Header = () => {
                         <span className="relative inline-flex rounded-full h-3 w-3 bg-accent-500"></span>
                       </span>
                       
-                      {currentUser.avatar ? (
-                        <img 
-                          src={currentUser.avatar} 
-                          alt={currentUser.name} 
-                          className="h-9 w-9 rounded-full object-cover border-2 border-white dark:border-gray-800 shadow-sm"
-                        />
-                      ) : (
-                        <div className={`h-9 w-9 rounded-full flex items-center justify-center text-white font-medium shadow-sm ${
-                          scrolled || !isHomepage
-                            ? 'bg-primary-500' 
-                            : 'bg-white/20'
-                        }`}>
-                          {currentUser.name.charAt(0).toUpperCase()}
-                        </div>
-                      )}
+                      <img 
+                        src={currentUser.avatar || defaultAvatar} 
+                        alt={currentUser.name || 'User'} 
+                        className="h-9 w-9 rounded-full object-cover border-2 border-white dark:border-gray-800 shadow-sm"
+                      />
                     </div>
                     <FaChevronDown 
                       size={12} 
@@ -391,8 +415,8 @@ const Header = () => {
                         className="absolute right-0 mt-2 w-64 rounded-2xl shadow-xl bg-white dark:bg-gray-800 ring-1 ring-gray-200 dark:ring-gray-700 focus:outline-none origin-top-right overflow-hidden"
                       >
                         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                          <p className="text-sm font-bold text-gray-900 dark:text-white">{currentUser.name}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{currentUser.email}</p>
+                          <p className="text-sm font-bold text-gray-900 dark:text-white">{currentUser.name || 'User'}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{currentUser.email || ''}</p>
                         </div>
                         <div className="py-2">
                           <Link 
@@ -544,20 +568,14 @@ const Header = () => {
                   <div className="my-2 border-t border-gray-200 dark:border-gray-800"></div>
                   
                   <div className="flex items-center px-4 py-3">
-                    {currentUser.avatar ? (
-                      <img 
-                        src={currentUser.avatar} 
-                        alt={currentUser.name} 
-                        className="h-10 w-10 rounded-full object-cover mr-3"
-                      />
-                    ) : (
-                      <div className="h-10 w-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center text-primary-700 dark:text-primary-300 font-bold mr-3">
-                        {currentUser.name.charAt(0).toUpperCase()}
-                      </div>
-                    )}
+                    <img 
+                      src={currentUser.avatar || defaultAvatar} 
+                      alt={currentUser.name || 'User'} 
+                      className="h-10 w-10 rounded-full object-cover mr-3"
+                    />
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-white">{currentUser.name}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{currentUser.email}</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{getUserDisplayName()}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{currentUser.email || ''}</p>
                     </div>
                   </div>
                   

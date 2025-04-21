@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { FaUser, FaEnvelope, FaLock, FaPhone, FaFacebookF, FaGoogle } from 'react-icons/fa';
@@ -12,29 +12,37 @@ const Register = () => {
   const [authError, setAuthError] = useState(null);
   const [socialLoading, setSocialLoading] = useState({ facebook: false, google: false });
   const password = watch("password", "");
-  const navigate = useNavigate(); // Initialize navigate hook
+  const navigate = useNavigate();
   
-  // Redirect if already logged in
-  if (currentUser) {
-    return <Navigate to="/dashboard" replace />;
-  }
+  // Check for existing user session and redirect if found
+  useEffect(() => {
+    if (currentUser) {
+      navigate('/dashboard');
+    }
+  }, [currentUser, navigate]);
   
   const onSubmit = async (data) => {
     try {
       setAuthError(null);
-      await registerUser(data);
+      const result = await registerUser(data);
       
-      // Show success message
-      toast.success('Account created successfully!');
-      
-      // Navigate to home page after successful registration
-      navigate('/');
+      if (result && result.success) {
+        // Show success message
+        toast.success('Account created successfully!');
+        
+        // Short delay before redirection to ensure state updates
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 300);
+      } else {
+        throw new Error(result?.message || 'Registration failed');
+      }
     } catch (error) {
       console.error("Registration error:", error);
       if (error.message === 'Network Error') {
         setAuthError('Unable to connect to the server. Please check your connection or try again later.');
       } else {
-        setAuthError(error.response?.data?.message || 'Registration failed. Please try again.');
+        setAuthError(error.response?.data?.message || error.message || 'Registration failed. Please try again.');
       }
     }
   };
@@ -46,10 +54,15 @@ const Register = () => {
       setSocialLoading({ ...socialLoading, [provider.toLowerCase()]: true });
       
       if (typeof socialLogin === 'function') {
-        await socialLogin(provider.toLowerCase());
-        // On success, will navigate via the currentUser check
+        const result = await socialLogin(provider.toLowerCase());
+        
+        if (result && result.success) {
+          toast.success(`Signed in with ${provider} successfully!`);
+          navigate('/dashboard');
+        } else {
+          throw new Error(result?.message || `Failed to authenticate with ${provider}`);
+        }
       } else {
-        // Fallback if socialLogin isn't implemented
         toast.info(`${provider} login will be available soon!`);
       }
     } catch (error) {
@@ -59,6 +72,11 @@ const Register = () => {
       setSocialLoading({ ...socialLoading, [provider.toLowerCase()]: false });
     }
   };
+  
+  // If already logged in, don't render the form
+  if (currentUser) {
+    return <Navigate to="/dashboard" />;
+  }
   
   return (
     <div className="min-h-screen bg-gradient-to-r from-blue-50 to-indigo-50 flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8">

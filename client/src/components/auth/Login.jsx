@@ -9,7 +9,7 @@ import tradeLogo from '../../images/tradelogo.png';
 
 const Login = () => {
   const { register, handleSubmit, formState: { errors } } = useForm();
-  const { login, currentUser, loading } = useAuth();
+  const { login, currentUser, loading, socialLogin } = useAuth();
   const [authError, setAuthError] = useState(null);
   const [socialLoading, setSocialLoading] = useState({ facebook: false, google: false });
   const navigate = useNavigate();
@@ -28,18 +28,25 @@ const Login = () => {
   const onSubmit = async (data) => {
     try {
       setAuthError(null);
-      await login(data);
+      const result = await login(data);
       
-      // Show success message
-      toast.success('Login successful!');
-      
-      // The redirection will happen via the useEffect above
+      if (result && result.success) {
+        // Show success message
+        toast.success('Login successful!');
+        
+        // Short delay before redirection to ensure state updates
+        setTimeout(() => {
+          navigate(from, { replace: true });
+        }, 300);
+      } else {
+        throw new Error(result?.message || 'Login failed');
+      }
     } catch (error) {
       console.error("Login error:", error);
       if (error.message === 'Network Error') {
         setAuthError('Unable to connect to the server. Please check your connection or try again later.');
       } else {
-        setAuthError(error.response?.data?.message || 'Login failed. Please check your credentials and try again.');
+        setAuthError(error.response?.data?.message || error.message || 'Login failed. Please check your credentials and try again.');
       }
     }
   };
@@ -50,8 +57,19 @@ const Login = () => {
       setAuthError(null);
       setSocialLoading({ ...socialLoading, [provider.toLowerCase()]: true });
       
-      // This should be implemented in your AuthContext
-      toast.info(`${provider} login will be available soon!`);
+      if (typeof socialLogin === 'function') {
+        const result = await socialLogin(provider.toLowerCase());
+        
+        if (result && result.success) {
+          toast.success(`Signed in with ${provider} successfully!`);
+          navigate(from, { replace: true });
+        } else {
+          throw new Error(result?.message || `Failed to authenticate with ${provider}`);
+        }
+      } else {
+        // This should be implemented in your AuthContext
+        toast.info(`${provider} login will be available soon!`);
+      }
     } catch (error) {
       console.error(`${provider} authentication error:`, error);
       setAuthError(`Failed to authenticate with ${provider}. Please try again.`);
@@ -67,6 +85,10 @@ const Login = () => {
         <Loader size="large" />
       </div>
     );
+  }
+  
+  if (currentUser) {
+    return <Navigate to={from} replace />;
   }
   
   return (

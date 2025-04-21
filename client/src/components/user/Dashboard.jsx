@@ -8,7 +8,7 @@ import Loader from '../common/Loader';
 
 const Dashboard = () => {
   const { currentUser } = useAuth();
-  const { getUserListings, deleteListing, loading: contextLoading } = useListing();
+  const { loadUserListings, deleteListing, loading: contextLoading } = useListing();
   
   const [myListings, setMyListings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,13 +16,17 @@ const Dashboard = () => {
   const [listingToDelete, setListingToDelete] = useState(null);
   
   useEffect(() => {
-    const loadUserListings = async () => {
+    const fetchUserListings = async () => {
       if (!currentUser?._id) return;
       
       try {
         setLoading(true);
-        const listings = await getUserListings(currentUser._id);
-        setMyListings(listings || []);
+        const response = await loadUserListings();
+        if (response && response.listings) {
+          setMyListings(response.listings || []);
+        } else {
+          setMyListings([]);
+        }
       } catch (error) {
         console.error("Error loading listings:", error);
         toast.error('Failed to load your listings');
@@ -32,8 +36,8 @@ const Dashboard = () => {
       }
     };
     
-    loadUserListings();
-  }, [currentUser, getUserListings]);
+    fetchUserListings();
+  }, [currentUser, loadUserListings]);
   
   const handleDeleteClick = (listing) => {
     setListingToDelete(listing);

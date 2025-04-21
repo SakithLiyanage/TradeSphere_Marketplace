@@ -13,14 +13,14 @@ const EditListing = () => {
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm();
   
   const { 
-    getListing,  // Changed from fetchListingById to getListing
+    getListing,
     updateListing, 
-    currentListing, 
     loading 
   } = useListing();
   
   const [uploadedImages, setUploadedImages] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [listingData, setListingData] = useState(null);
   const selectedCategory = watch('category');
   
   // Various specs fields based on category
@@ -54,9 +54,11 @@ const EditListing = () => {
   useEffect(() => {
     const loadListing = async () => {
       try {
-        const listing = await getListing(id);  // Changed from fetchListingById to getListing
+        const listing = await getListing(id);
         
         if (listing) {
+          setListingData(listing);
+          
           // Set form values
           setValue('title', listing.title);
           setValue('description', listing.description);
@@ -83,14 +85,14 @@ const EditListing = () => {
           }
         }
       } catch (error) {
-        console.error(error);
+        console.error('Error loading listing:', error);
         toast.error('Failed to load listing');
         navigate('/dashboard');
       }
     };
     
     loadListing();
-  }, [getListing, id, navigate, setValue, categoryFields]);
+  }, [id, setValue, getListing, navigate]);
   
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
@@ -115,7 +117,11 @@ const EditListing = () => {
         formData.append('image', file);
         
         const response = await uploadImage(formData);
-        setUploadedImages(prev => [...prev, response.imageUrl]);
+        if (response && response.imageUrl) {
+          setUploadedImages(prev => [...prev, response.imageUrl]);
+        } else {
+          throw new Error('Invalid response from image upload');
+        }
       }
     } catch (error) {
       toast.error('Failed to upload images');
@@ -142,28 +148,34 @@ const EditListing = () => {
       categoryFields[selectedCategory].forEach(field => {
         if (data[field.name]) {
           specifications[field.label] = data[field.name];
-          delete data[field.name]; // Remove from main data object
+          // Remove field from main data object after extracting
+          delete data[field.name];
         }
       });
     }
     
     try {
-      const listingData = {
+      const updatedListingData = {
         ...data,
         images: uploadedImages,
         specifications: Object.keys(specifications).length > 0 ? specifications : undefined
       };
       
-      await updateListing(id, listingData);
-      toast.success('Listing updated successfully!');
-      navigate(`/listings/${id}`);
+      const result = await updateListing(id, updatedListingData);
+      
+      if (result) {
+        toast.success('Listing updated successfully!');
+        navigate(`/listings/${id}`);
+      } else {
+        throw new Error('Failed to update listing');
+      }
     } catch (error) {
-      toast.error('Failed to update listing');
-      console.error(error);
+      console.error('Update error:', error);
+      toast.error(error.message || 'Failed to update listing');
     }
   };
   
-  if (loading && !currentListing) {
+  if (loading && !listingData) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader size="large" />

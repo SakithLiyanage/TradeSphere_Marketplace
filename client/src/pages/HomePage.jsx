@@ -10,6 +10,7 @@ import { HiOutlineSparkles, HiTrendingUp } from 'react-icons/hi';
 import { useListing } from '../context/ListingContext';
 import Loader from '../components/common/Loader';
 import ListingCard from '../components/listings/ListingCard';
+import ChatBot from '../components/common/ChatBot';
 
 // Enhanced ScrollReveal Component for more professional animations
 const ScrollReveal = ({ children, threshold = 0.1 }) => {
@@ -674,9 +675,7 @@ const HomePage = () => {
           <ScrollReveal threshold={0.1}>
             <div className="mt-20 pt-12 border-t border-gray-800">
               <div className="grid md:grid-cols-4 gap-8 text-center">
-                {[
-                 
-                ].map((stat, i) => (
+                {[].map((stat, i) => (
                   <motion.div 
                     key={i}
                     initial={{ opacity: 0, y: 20 }}
@@ -710,26 +709,7 @@ const HomePage = () => {
           </ScrollReveal>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {[
-              {
-                quote: "I sold my old furniture in less than 24 hours! The platform is so easy to use and there are so many active users.",
-                name: "Sarah Johnson",
-                role: "Seller",
-                image: "https://randomuser.me/api/portraits/women/44.jpg"
-              },
-              {
-                quote: "As someone who loves bargain hunting, TradeSphere has been a goldmine. I've found amazing deals on collectibles I couldn't find anywhere else.",
-                name: "Michael Chen",
-                role: "Buyer",
-                image: "https://randomuser.me/api/portraits/men/32.jpg"
-              },
-              {
-                quote: "The verification system makes me feel safe when meeting with buyers. I've been using this platform for years and never had any issues.",
-                name: "Jessica Williams",
-                role: "Regular User",
-                image: "https://randomuser.me/api/portraits/women/63.jpg"
-              }
-            ].map((testimonial, i) => (
+            {[].map((testimonial, i) => (
               <ScrollReveal key={i} threshold={0.1}>
                 <motion.div 
                   className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100 hover:border-primary-100 transition-all duration-300"
@@ -853,6 +833,9 @@ const HomePage = () => {
           </div>
         </div>
       </div>
+
+      {/* Add ChatBot component at the end */}
+      <ChatBot />
 
       {/* Add custom styling for hiding scrollbars while allowing scrolling */}
       <style jsx>{`

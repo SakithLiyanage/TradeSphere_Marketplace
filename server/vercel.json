@@ -15,6 +15,16 @@
       }
     ],
     "env": {
-        "NODE_ENV": "production"
+        "NODE_ENV": "production",
+        "MONGODB_CONNECT_TIMEOUT": "60000",
+        "MONGODB_SOCKET_TIMEOUT": "60000",
+        "MONGODB_SERVER_SELECTION_TIMEOUT": "60000"
+    },
+    "regions": ["iad1"],
+    "functions": {
+      "server.js": {
+        "memory": 1024,
+        "maxDuration": 10
+      }
     }
 }

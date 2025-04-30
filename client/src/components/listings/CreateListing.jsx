@@ -84,7 +84,7 @@ const CreateListing = () => {
         const formData = new FormData();
         formData.append('image', file);
         
-        const response = await axios.post(`${process.env.REACT_APP_API_URL || 'https://tradesphere-backend.vercel.app'}/api/uploads`, formData, {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/uploads`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
             'Authorization': `Bearer ${localStorage.getItem('token')}`

@@ -33,7 +33,7 @@ const Favorites = () => {
       }
 
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL || 'https://tradesphere-backend.vercel.app'}/api/favorites`, 
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/favorites`, 
         {
           headers: { Authorization: `Bearer ${token}` },
           params: { 
@@ -66,7 +66,7 @@ const Favorites = () => {
       }
 
       const response = await axios.delete(
-        `${process.env.REACT_APP_API_URL || 'https://tradesphere-backend.vercel.app'}/api/favorites/${listingId}`,
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/favorites/${listingId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

@@ -45,7 +45,7 @@ To start the server, run:
 ```
 npm start
 ```
-The server will run on `https://tradesphere-backend.vercel.app`.
+The server will run on `http://localhost:5000`.
 
 ### API Endpoints
 - **Authentication**

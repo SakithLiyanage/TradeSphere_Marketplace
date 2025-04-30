@@ -26,7 +26,7 @@ export const ListingProvider = ({ children }) => {
       setLoading(true);
       
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL || 'https://tradesphere-backend.vercel.app'}/api/categories`
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/categories`
       );
       
       if (response.data.success) {
@@ -57,7 +57,7 @@ export const ListingProvider = ({ children }) => {
       });
       
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL || 'https://tradesphere-backend.vercel.app'}/api/listings?${queryParams.toString()}`
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/listings?${queryParams.toString()}`
       );
       
       if (response.data.success) {
@@ -93,7 +93,7 @@ export const ListingProvider = ({ children }) => {
       });
       
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL || 'https://tradesphere-backend.vercel.app'}/api/listings?${queryParams.toString()}`
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/listings?${queryParams.toString()}`
       );
       
       if (response.data.success) {
@@ -123,7 +123,7 @@ export const ListingProvider = ({ children }) => {
       
       // Fetch featured listings
       const featuredResponse = await axios.get(
-        `${process.env.REACT_APP_API_URL || 'https://tradesphere-backend.vercel.app'}/api/listings?featured=true&limit=8`
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/listings?featured=true&limit=8`
       );
       
       if (featuredResponse.data.success) {
@@ -132,7 +132,7 @@ export const ListingProvider = ({ children }) => {
       
       // Fetch recent listings
       const recentResponse = await axios.get(
-        `${process.env.REACT_APP_API_URL || 'https://tradesphere-backend.vercel.app'}/api/listings?limit=8&sort=createdAt-desc`
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/listings?limit=8&sort=createdAt-desc`
       );
       
       if (recentResponse.data.success) {
@@ -159,7 +159,7 @@ export const ListingProvider = ({ children }) => {
       }
       
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL || 'https://tradesphere-backend.vercel.app'}/api/listings/user/me?page=${page}`,
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/listings/user/me?page=${page}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
@@ -184,7 +184,7 @@ export const ListingProvider = ({ children }) => {
       setLoading(true);
       
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL || 'https://tradesphere-backend.vercel.app'}/api/listings/${id}`
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/listings/${id}`
       );
       
       if (response.data.success) {
@@ -215,7 +215,7 @@ export const ListingProvider = ({ children }) => {
       }
       
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL || 'https://tradesphere-backend.vercel.app'}/api/listings`,
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/listings`,
         listingData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -252,7 +252,7 @@ export const ListingProvider = ({ children }) => {
       }
 
       const response = await axios.put(
-        `${process.env.REACT_APP_API_URL || 'https://tradesphere-backend.vercel.app'}/api/listings/${id}`,
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/listings/${id}`,
         listingData,
         {
           headers: {
@@ -297,7 +297,7 @@ export const ListingProvider = ({ children }) => {
       }
 
       const response = await axios.delete(
-        `${process.env.REACT_APP_API_URL || 'https://tradesphere-backend.vercel.app'}/api/listings/${id}`,
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/listings/${id}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`

@@ -1,6 +1,7 @@
 {
     "version": 2,
     "name": "tradesphere-backend",
+
     "builds": [
       {
         "src": "server.js",
@@ -8,19 +9,7 @@
       }
     ],
     "routes": [
-      {
-        "src": "/(.*)", 
-        "dest": "/server.js"
-      }
-    ],
-    "env": {
-        "NODE_ENV": "production"
-    },
-    "regions": ["iad1"],
-    "functions": {
-      "server.js": {
-        "memory": 1024,
-        "maxDuration": 10
-      }
-    }
+      { "src": "/(.*)", 
+      "dest": "/server.js" }
+    ]
 }

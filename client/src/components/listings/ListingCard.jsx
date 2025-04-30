@@ -37,7 +37,7 @@ const ListingCard = ({ listing, featured = false }) => {
       if (!token) return;
 
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL || 'https://tradesphere-backend.vercel.app'}/api/favorites/${_id}/check`,
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/favorites/${_id}/check`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
@@ -64,7 +64,7 @@ const ListingCard = ({ listing, featured = false }) => {
       if (isFavorited) {
         // Remove from favorites
         await axios.delete(
-          `${process.env.REACT_APP_API_URL || 'https://tradesphere-backend.vercel.app'}/api/favorites/${_id}`,
+          `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/favorites/${_id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         toast.success('Removed from favorites');
@@ -72,7 +72,7 @@ const ListingCard = ({ listing, featured = false }) => {
       } else {
         // Add to favorites
         await axios.post(
-          `${process.env.REACT_APP_API_URL || 'https://tradesphere-backend.vercel.app'}/api/favorites`,
+          `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/favorites`,
           { listingId: _id },
           { headers: { Authorization: `Bearer ${token}` } }
         );

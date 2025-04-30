@@ -37,6 +37,15 @@ app.use('/api/favorites', favoriteRoutes);
 app.use('/api/listings', require('./routes/listingRoutes'));
 app.use('/api/categories', require('./routes/categoryRoutes'));
 
+// Root route - API information
+app.get('/', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'TradeSphere Marketplace API is running',
+    version: '1.0.0',
+    documentation: '/api/docs'
+  });
+});
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));

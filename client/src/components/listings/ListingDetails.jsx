@@ -91,7 +91,7 @@ const ListingDetails = () => {
       if (!token) return;
       
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/favorites/${id}/check`,
+        `${process.env.REACT_APP_API_URL || 'https://tradesphere-backend.vercel.app'}/api/favorites/${id}/check`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
@@ -116,7 +116,7 @@ const ListingDetails = () => {
       if (isFavorited) {
         // Remove from favorites
         await axios.delete(
-          `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/favorites/${id}`,
+          `${process.env.REACT_APP_API_URL || 'https://tradesphere-backend.vercel.app'}/api/favorites/${id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         toast.success('Removed from favorites');
@@ -124,7 +124,7 @@ const ListingDetails = () => {
       } else {
         // Add to favorites
         await axios.post(
-          `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/favorites`,
+          `${process.env.REACT_APP_API_URL || 'https://tradesphere-backend.vercel.app'}/api/favorites`,
           { listingId: id },
           { headers: { Authorization: `Bearer ${token}` } }
         );

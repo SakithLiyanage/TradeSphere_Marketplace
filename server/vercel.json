@@ -1,7 +1,6 @@
 {
     "version": 2,
     "name": "tradesphere-backend",
-
     "builds": [
       {
         "src": "server.js",
@@ -15,10 +14,7 @@
       }
     ],
     "env": {
-        "NODE_ENV": "production",
-        "MONGODB_CONNECT_TIMEOUT": "60000",
-        "MONGODB_SOCKET_TIMEOUT": "60000",
-        "MONGODB_SERVER_SELECTION_TIMEOUT": "60000"
+        "NODE_ENV": "production"
     },
     "regions": ["iad1"],
     "functions": {

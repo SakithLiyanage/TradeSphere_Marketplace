@@ -4,6 +4,7 @@ import { FaFilter, FaSort, FaTimes } from 'react-icons/fa';
 import { useListing } from '../context/ListingContext';
 import ListingCard from '../components/listings/ListingCard';
 import Loader from '../components/common/Loader';
+import ChatBot from '../components/common/ChatBot'; // Import ChatBot component
 
 const toTitleCase = (str) => {
   if (!str) return '';
@@ -397,6 +398,9 @@ const CategoryPage = () => {
           </nav>
         </div>
       )}
+      
+      {/* Add ChatBot component */}
+      <ChatBot />
     </div>
   );
 };

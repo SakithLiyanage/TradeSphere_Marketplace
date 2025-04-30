@@ -18,6 +18,7 @@ import { toast } from 'react-hot-toast';
 import { useListing } from '../../context/ListingContext';
 import { useAuth } from '../../context/AuthContext';
 import Loader from '../common/Loader';
+import ChatBot from '../../components/common/ChatBot'; // Import ChatBot component
 
 // Helper functions for formatting
 const formatPrice = (price) => {
@@ -453,6 +454,9 @@ const ListingDetails = () => {
           </div>
         </div>
       </div>
+      
+      {/* Add ChatBot component */}
+      <ChatBot />
       
       {/* Delete confirmation modal */}
       {showDeleteConfirm && (

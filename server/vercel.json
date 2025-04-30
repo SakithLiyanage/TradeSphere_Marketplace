@@ -1,0 +1,15 @@
+{
+    "version": 2,
+    "name": "tradesphere-backend",
+
+    "builds": [
+      {
+        "src": "server.js",
+        "use": "@vercel/node"
+      }
+    ],
+    "routes": [
+      { "src": "/(.*)", 
+      "dest": "/server.js" }
+    ]
+}

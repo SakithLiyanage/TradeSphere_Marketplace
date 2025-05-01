@@ -1,32 +1,85 @@
-# Ikman Marketplace Client
+# TradeSphere Marketplace Client
 
-This is the client-side application for the Ikman Marketplace, built using the MERN stack (MongoDB, Express, React, Node.js). The application allows users to post their properties such as vehicles, lands, electrical items, and other goods to a marketplace. Other users can view these listings and contact the sellers for purchase.
+This is the client-side application for the TradeSphere Marketplace, built using the MERN stack (MongoDB, Express, React, Node.js). The application allows users to post their properties such as vehicles, lands, electrical items, and other goods to a marketplace. Other users can view these listings and contact the sellers for purchase.
 
 ## Features
 
-- User authentication (login and registration)
-- Create, edit, and delete listings
-- View detailed information about each listing
-- User profiles and dashboards
-- Responsive design using Tailwind CSS
-- Loading indicators for data fetching
+- **User Authentication**
+  - Secure login and registration
+  - JWT-based authentication
+  - Password recovery
+  - Email verification
+  - Social media login integration
+
+- **Listings Management**
+  - Create, edit, and delete listings
+  - Add multiple images with drag and drop functionality
+  - Categorize listings by type (vehicles, electronics, real estate, etc.)
+  - Set pricing and negotiation preferences
+  - Mark listings as sold or available
+
+- **Search and Discovery**
+  - Advanced search with filters
+  - Location-based search
+  - Price range filtering
+  - Category-specific attribute filtering
+  - Saved searches and alerts
+
+- **User Profiles and Dashboard**
+  - Customizable user profiles
+  - Activity history and statistics
+  - Favorite/wishlist functionality
+  - Message center for buyer-seller communication
+  - Purchase and selling history
+
+- **User Experience**
+  - Responsive design using Tailwind CSS
+  - Dark/light mode toggle
+  - Loading indicators for seamless data fetching
+  - Infinite scrolling for listing pages
+  - Real-time notifications
+
+- **Security Features**
+  - Data encryption
+  - Protection against common web vulnerabilities
+  - Rate limiting to prevent abuse
+  - GDPR compliance for user data
+
+## Technologies Used
+
+- **Frontend**: React.js, Redux, Tailwind CSS, Axios
+- **Backend**: Node.js, Express.js, MongoDB
+- **Authentication**: JWT, OAuth
+- **Image Storage**: AWS S3/Cloudinary
+- **Deployment**: Docker, Netlify/Vercel (frontend), Heroku/AWS (backend)
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js and npm installed on your machine.
-- MongoDB database (local or cloud).
+- Node.js (v14.0 or later) and npm installed on your machine
+- MongoDB database (local or cloud-based instance)
+- Git for version control
+
+### Environment Variables
+
+Create a `.env` file in the client directory with the following variables:
+```
+REACT_APP_API_URL=<your_api_url>
+REACT_APP_CLOUDINARY_NAME=<your_cloudinary_name>
+REACT_APP_CLOUDINARY_API_KEY=<your_cloudinary_api_key>
+REACT_APP_CLOUDINARY_API_SECRET=<your_cloudinary_api_secret>
+```
 
 ### Installation
 
 1. Clone the repository:
 
-   git clone https://github.com/yourusername/ikman-marketplace.git
+   git clone https://github.com/yourusername/tradesphere-marketplace.git
 
 2. Navigate to the client directory:
 
-   cd ikman-marketplace/client
+   cd tradesphere-marketplace/client
 
 3. Install the dependencies:
 

@@ -222,7 +222,7 @@ const HomePage = () => {
       {/* Ultra Modern Hero Section with 3D effect and Parallax */}
       <div 
         ref={targetRef} 
-        className="relative min-h-[100vh] flex items-center justify-center overflow-hidden"
+        className="relative min-h-[120vh] flex items-center justify-center overflow-hidden"
       >
         {/* Dynamic background - multi-layered */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary-700 via-primary-800 to-indigo-900" />

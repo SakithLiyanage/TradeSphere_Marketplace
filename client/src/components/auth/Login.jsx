@@ -209,39 +209,11 @@ const Login = () => {
             </div>
           </form>
 
-          <div className="mt-8">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-3 bg-white text-gray-500">
-                  Or continue with
-                </span>
-              </div>
-            </div>
+          
+            
 
-            <div className="mt-6 grid grid-cols-2 gap-4">
-              <button
-                type="button"
-                onClick={() => handleSocialAuth('Facebook')}
-                disabled={socialLoading.facebook}
-                className="w-full inline-flex justify-center items-center py-2.5 px-4 border border-gray-200 rounded-lg bg-white hover:bg-gray-50 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-60"
-              >
-                {socialLoading.facebook ? <Loader size="small" /> : <FaFacebookF className="text-blue-600 mr-2" />}
-                <span className="text-sm font-medium text-gray-700">Facebook</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSocialAuth('Google')}
-                disabled={socialLoading.google}
-                className="w-full inline-flex justify-center items-center py-2.5 px-4 border border-gray-200 rounded-lg bg-white hover:bg-gray-50 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-60"
-              >
-                {socialLoading.google ? <Loader size="small" /> : <FaGoogle className="text-red-500 mr-2" />}
-                <span className="text-sm font-medium text-gray-700">Google</span>
-              </button>
-            </div>
-          </div>
+            
+          
         </div>
       </div>
     </div>

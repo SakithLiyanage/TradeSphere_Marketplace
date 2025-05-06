@@ -19,7 +19,7 @@ TradeSphere-marketplace is a full-stack web application that allows users to pos
 
 ## Project Structure
 ```
-ikman-marketplace
+TradeSphere-marketplace
 ├── client                # Frontend application
 │   ├── public            # Public assets
 │   ├── src               # Source files for React app

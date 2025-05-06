@@ -1,7 +1,7 @@
-# Ikman Marketplace Server
+# TradeSphere Marketplace Server
 
 ## Overview
-The Ikman Marketplace server is built using Node.js and Express, providing a RESTful API for the client-side application. This server allows users to register, log in, and manage their listings for various items such as vehicles, lands, and electrical items.
+The TradeSphere Marketplace server is built using Node.js and Express, providing a RESTful API for the client-side application. This server allows users to register, log in, and manage their listings for various items such as vehicles, lands, and electrical items.
 
 ## Features
 - User authentication (registration and login)
@@ -20,11 +20,11 @@ The Ikman Marketplace server is built using Node.js and Express, providing a RES
 ### Installation
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/ikman-marketplace.git
+   git clone https://github.com/yourusername/TradeSphere-marketplace.git
    ```
 2. Navigate to the server directory:
    ```
-   cd ikman-marketplace/server
+   cd TradeSphere-marketplace/server
    ```
 3. Install the dependencies:
    ```

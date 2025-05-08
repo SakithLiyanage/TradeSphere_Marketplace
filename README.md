@@ -1,7 +1,7 @@
-# TradeSphere-marketplace
+# TradeSphere Marketplace
 
 ## Overview
-TradeSphere-marketplace is a full-stack web application that allows users to post and browse listings for various items such as vehicles, lands, electrical items, and more. Built using the MERN stack (MongoDB, Express, React, Node.js), this application provides a modern and responsive user interface using Tailwind CSS.
+TradeSphere Marketplace is a full-stack web application that allows users to post and browse listings for various items such as vehicles, lands, electrical items, and more. Built using the MERN stack (MongoDB, Express, React, Node.js), this application provides a modern and responsive user interface using Tailwind CSS.
 
 ## Features
 - User authentication (registration and login)
@@ -19,7 +19,7 @@ TradeSphere-marketplace is a full-stack web application that allows users to pos
 
 ## Project Structure
 ```
-TradeSphere-marketplace
+TradeSphere Marketplace
 ├── client                # Frontend application
 │   ├── public            # Public assets
 │   ├── src               # Source files for React app
@@ -50,8 +50,8 @@ TradeSphere-marketplace
 
 1. Clone the repository:
    ```
-   git clone 
-   cd 
+   git clone https://github.com/yourusername/TradeSphere-Marketplace.git
+   cd TradeSphere-Marketplace
    ```
 
 2. Install server dependencies:
@@ -90,5 +90,3 @@ Contributions are welcome! Please open an issue or submit a pull request for any
 
 ## License
 This project is licensed under the MIT License. See the LICENSE file for details.
-=======
-# TradeSphere_Marketplace

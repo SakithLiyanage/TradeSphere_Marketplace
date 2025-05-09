@@ -1,5 +1,8 @@
 # TradeSphere Marketplace
 
+![tradesphere](https://github.com/user-attachments/assets/45069e2a-5e71-4b42-89ae-a7bb1f6c489b)
+
+
 ## Overview
 TradeSphere Marketplace is a full-stack web application that allows users to post and browse listings for various items such as vehicles, lands, electrical items, and more. Built using the MERN stack (MongoDB, Express, React, Node.js), this application provides a modern and responsive user interface using Tailwind CSS.
 
